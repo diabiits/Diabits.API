@@ -1,0 +1,6 @@
+@Diabits.API_HostAddress = http://localhost:5278
+
+GET {{Diabits.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
