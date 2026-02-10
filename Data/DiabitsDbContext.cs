@@ -13,6 +13,7 @@ public class DiabitsDbContext : IdentityDbContext<DiabitsUser>
 
     public DbSet<HealthDataPoint> HealthDataPoints { get; set; }
     public DbSet<Invite> Invites { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
