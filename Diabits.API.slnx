@@ -1,3 +1,4 @@
 <Solution>
-  <Project Path="Diabits.API.csproj" />
+  <Project Path="Diabits.API.Tests/Diabits.API.Tests.csproj" />
+  <Project Path="Diabits.API/Diabits.API.csproj" />
 </Solution>

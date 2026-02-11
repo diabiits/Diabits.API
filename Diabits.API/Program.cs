@@ -20,6 +20,9 @@ builder.Services.AddIdentity<DiabitsUser, IdentityRole>()
                 .AddEntityFrameworkStores<DiabitsDbContext>()
                 .AddDefaultTokenProviders();
 
+// Register custom service extensions 
+builder.Services.AddJwtAuthentication(builder.Configuration);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
