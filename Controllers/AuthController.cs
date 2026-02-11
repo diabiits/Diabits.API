@@ -12,6 +12,12 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
     private readonly IAuthService _authService = authService;
     private readonly ILogger<AuthController> _logger = logger;
 
+    public AuthController(IAuthService authService, ILogger<AuthController> logger)
+    {
+        _authService = authService;
+        _logger = logger;
+    }
+
     [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
