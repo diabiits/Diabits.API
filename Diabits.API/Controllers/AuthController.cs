@@ -24,7 +24,7 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
         catch (InvalidOperationException ex)
         {
             // Service throws InvalidOperationException for expected user-facing errors (email already used etc)
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(error: ex.Message);
         }
         catch (Exception e)
         {
@@ -45,7 +45,7 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
         catch (InvalidOperationException ex)
         {
             // Bad request for known authentication failures surfaced by the service
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(error: ex.Message);
         }
         catch (Exception e)
         {
@@ -92,7 +92,7 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
         {
             // Invalid/expired refresh token results in 401 to signal the client to reauthenticate.
             _logger.LogWarning(e, "Invalid refresh token attempt");
-            return Unauthorized(new { message = e.Message });
+            return Unauthorized(value: e.Message);
         }
         catch (Exception e)
         {

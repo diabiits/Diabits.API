@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Diabits.API.Configuration;
 using Diabits.API.Data;
 using Diabits.API.DTOs;
 using Diabits.API.Interfaces;
@@ -36,23 +37,6 @@ public class AuthService(UserManager<DiabitsUser> userManager, DiabitsDbContext 
         return new AuthResponse(accessToken, expiration, refreshToken);
     }
 
-    /// <summary>
-    /// Delete a refresh token on logout. If token not found, operation is idempotent
-    /// </summary>
-    /// <param name="refreshToken"></param>
-    /// <returns></returns>
-    public async Task LogoutAsync(string refreshToken)
-    {
-        var tokenHash = HashToken(refreshToken);
-        var stored = await _dbContext.RefreshTokens.FirstOrDefaultAsync(r => r.TokenHash == tokenHash);
-
-        if (stored == null)
-            return;
-
-        // Delete the refresh token so it cannot be used again.
-        _dbContext.RefreshTokens.Remove(stored);
-        await _dbContext.SaveChangesAsync();
-    }
 
     /// <summary>
     /// Register a new user using an invite code
@@ -61,7 +45,7 @@ public class AuthService(UserManager<DiabitsUser> userManager, DiabitsDbContext 
     {
         // Invite-based registration: ensure invite exists, unused and email matches
         var invite = await _dbContext.Invites.FirstOrDefaultAsync(i => i.Code == request.InviteCode && i.UsedAt == null);
-        
+
         if (invite == null || invite.Email != request.Email)
             throw new InvalidOperationException("Invalid invite");
 
@@ -97,20 +81,41 @@ public class AuthService(UserManager<DiabitsUser> userManager, DiabitsDbContext 
     }
 
     /// <summary>
+    /// Delete a refresh token on logout. If token not found, operation is idempotent
+    /// </summary>
+    public async Task LogoutAsync(string refreshToken)
+    {
+        var tokenHash = refreshToken.HashToken();
+        var stored = await _dbContext.RefreshTokens.FirstOrDefaultAsync(r => r.TokenHash == tokenHash);
+
+        if (stored == null)
+            return;
+
+        // Delete the refresh token so it cannot be used again.
+        _dbContext.RefreshTokens.Remove(stored);
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>
     /// Validate a refresh token and issue a new access token (keeps the same refresh token).
     /// </summary>
     public async Task<AuthResponse> RefreshAccessTokenAsync(string refreshToken)
     {
-        var tokenHash = HashToken(refreshToken);
-        var stored = await _dbContext.RefreshTokens.FirstOrDefaultAsync(r => r.TokenHash == tokenHash);
+        var tokenHash = refreshToken.HashToken();
 
-        if (stored == null || stored.ExpiresAt < DateTime.UtcNow)
+        var stored = await _dbContext.RefreshTokens.FirstOrDefaultAsync(r => r.TokenHash == tokenHash) 
+            ?? throw new InvalidOperationException("Invalid refresh token");
+       
+        if (stored.ExpiresAt < DateTime.UtcNow)
+        {
+            _dbContext.RefreshTokens.Remove(stored);
             throw new InvalidOperationException("Invalid refresh token");
+        }
 
-        var user = await _userManager.FindByIdAsync(stored.UserId) 
+        var user = await _userManager.FindByIdAsync(stored.UserId)
             ?? throw new InvalidOperationException("User not found");
 
-        // Issue a new access token but keep the same refresh token.
+        // Issue a new access token
         var (accessToken, expiration) = await GenerateAccessTokenAsync(user);
 
         return new AuthResponse(AccessToken: accessToken, expiration, refreshToken);
@@ -158,23 +163,17 @@ public class AuthService(UserManager<DiabitsUser> userManager, DiabitsDbContext 
 
         var refreshToken = new RefreshToken
         {
-            TokenHash = HashToken(unhashedToken),
+            TokenHash = unhashedToken.HashToken(),
             UserId = user.Id,
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.AddDays(30)
         };
 
-        // TODO Returning object with plain token for client, but DB has hash
+        // Returning object with plain token for client, but DB has hash
         _dbContext.RefreshTokens.Add(refreshToken);
         await _dbContext.SaveChangesAsync();
 
         return unhashedToken;
     }
 
-    private static string HashToken(string token)
-    {
-        using var sha256 = SHA256.Create();
-        var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(token));
-        return Convert.ToBase64String(hashBytes);
-    }
 }
