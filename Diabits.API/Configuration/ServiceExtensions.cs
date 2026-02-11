@@ -1,15 +1,18 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using System.Text;
 
 namespace Diabits.API.Configuration;
 
 /// <summary>
-/// Centralized extension methods to register common services used by the Diabits API
+/// Centralized extension methods to register common services used by the Diabits API.
 /// </summary>
 public static class ServiceExtensions
 {
-    // Registers JWT bearer authentication and authorization services using configuration values
+    /// <summary>
+    /// Registers JWT bearer authentication and authorization services using configuration values.S
+    /// </summary>
     public static void AddJwtAuthentication(this IServiceCollection services, IConfiguration config)
     {
         services
@@ -27,14 +30,40 @@ public static class ServiceExtensions
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = config["Jwt:Issuer"],  
+                    ValidIssuer = config["Jwt:Issuer"],
                     ValidAudience = config["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(config["Jwt:Key"]!)
-                    )
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!))
                 };
             });
 
         services.AddAuthorization(); // Adds policy-based authorization services (no custom policies here)
+    }
+
+    /// <summary>
+    /// Configures Swagger generation and adds a security definition so the Swagger UI can accept a JWT bearer token.
+    /// </summary>
+    public static void AddSwaggerWithAuth(this IServiceCollection services)
+    {
+        services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new() { Title = "Diabits API", Version = "v1" });
+
+            // Define the Bearer authentication scheme for Swagger/OpenAPI.
+            options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "JWT Authorization header using the Bearer scheme."
+            });
+
+            // Require the Bearer scheme for operations that need authentication.
+            options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference("bearer", doc)] = []
+            });
+        });
     }
 }

@@ -9,8 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
 
 // Register EF Core DbContext (custom DbContext for domain models) and configure SQL Server connection.
 builder.Services.AddDbContext<DiabitsDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DiabitsDb")));
@@ -22,13 +20,22 @@ builder.Services.AddIdentity<DiabitsUser, IdentityRole>()
 
 // Register custom service extensions 
 builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddSwaggerWithAuth();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "diabits API V1");
+        c.RoutePrefix = string.Empty;
+    });
+}
+else
+{
+    app.UseHttpsRedirection();
 }
 
 app.UseHttpsRedirection();
@@ -45,7 +52,7 @@ using (var scope = app.Services.CreateScope())
 
     var pendingMigrations = dbContext.Database.GetPendingMigrations();
     if (pendingMigrations.Any())
-        await dbContext.Database.MigrateAsync(); // Apply migrations automatically when present.
+        await dbContext.Database.MigrateAsync();
 
     await IdentitySeeder.SeedRolesAndAdminAsync(services);
 }
