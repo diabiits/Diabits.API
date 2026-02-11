@@ -4,3 +4,4 @@
 public record RegisterRequest(string Username, string Password, string Email, string InviteCode);
 public record LoginRequest(string Username, string Password);
 public record RefreshTokenRequest(string RefreshToken);
+public record CreateInviteRequest(string Email);
