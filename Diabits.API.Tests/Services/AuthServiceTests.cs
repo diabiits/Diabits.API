@@ -19,20 +19,19 @@ public sealed class AuthServiceTests : IDisposable
     private const string JwtIssuer = "TestIssuer";
     private const string JwtAudience = "TestAudience";
 
-    private readonly Mock<UserManager<DiabitsUser>> _userManager = CreateUserManagerMock();
+    private readonly Mock<UserManager<DiabitsUser>> _mockUserManager = CreateUserManagerMock();
     private readonly DiabitsDbContext _db;
     private readonly AuthService _authService;
 
     public AuthServiceTests()
     {
         _db = CreateInMemoryDb();
-        _authService = new AuthService(_userManager.Object, _db, CreateJwtConfiguration().Object);
+        _authService = new AuthService(_mockUserManager.Object, _db, CreateJwtConfiguration().Object);
     }
 
     public void Dispose()
     {
         _db.Dispose();
-        GC.SuppressFinalize(this);
     }
 
     [Fact]
@@ -78,16 +77,16 @@ public sealed class AuthServiceTests : IDisposable
         var user = username is null ? null : CreateUser(id: "id", username: username);
         var request = new LoginRequest(username ?? "invalid", password);
 
-        _userManager.Setup(um => um.FindByNameAsync(request.Username)).ReturnsAsync(user);
+        _mockUserManager.Setup(um => um.FindByNameAsync(request.Username)).ReturnsAsync(user);
 
         if (user is not null)
-            _userManager.Setup(um => um.CheckPasswordAsync(user, request.Password)).ReturnsAsync(false);
+            _mockUserManager.Setup(um => um.CheckPasswordAsync(user, request.Password)).ReturnsAsync(false);
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _authService.LoginAsync(request));
         Assert.Equal(expectedMessage, ex.Message);
 
         if (user is null)
-            _userManager.Verify(um => um.CheckPasswordAsync(It.IsAny<DiabitsUser>(), It.IsAny<string>()), Times.Never);
+            _mockUserManager.Verify(um => um.CheckPasswordAsync(It.IsAny<DiabitsUser>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -98,14 +97,14 @@ public sealed class AuthServiceTests : IDisposable
 
         DiabitsUser? createdUser = null;
 
-        _userManager.Setup(um => um.FindByNameAsync(request.Username)).ReturnsAsync((DiabitsUser)null!);
-        _userManager
+        _mockUserManager.Setup(um => um.FindByNameAsync(request.Username)).ReturnsAsync((DiabitsUser)null!);
+        _mockUserManager
             .Setup(um => um.CreateAsync(It.IsAny<DiabitsUser>(), request.Password))
             .Callback<DiabitsUser, string>((u, _) => createdUser = u)
             .ReturnsAsync(IdentityResult.Success);
 
-        _userManager.Setup(um => um.AddToRoleAsync(It.IsAny<DiabitsUser>(), "User")).ReturnsAsync(IdentityResult.Success);
-        _userManager.Setup(um => um.GetRolesAsync(It.IsAny<DiabitsUser>())).ReturnsAsync(["User"]);
+        _mockUserManager.Setup(um => um.AddToRoleAsync(It.IsAny<DiabitsUser>(), "User")).ReturnsAsync(IdentityResult.Success);
+        _mockUserManager.Setup(um => um.GetRolesAsync(It.IsAny<DiabitsUser>())).ReturnsAsync(["User"]);
 
         var result = await _authService.RegisterAsync(request);
 
@@ -115,8 +114,8 @@ public sealed class AuthServiceTests : IDisposable
         Assert.NotNull(createdUser);
         Assert.Equal(invite.Id, createdUser.InviteId);
 
-        _userManager.Verify(um => um.CreateAsync(It.IsAny<DiabitsUser>(), request.Password), Times.Once);
-        _userManager.Verify(um => um.AddToRoleAsync(It.IsAny<DiabitsUser>(), "User"), Times.Once);
+        _mockUserManager.Verify(um => um.CreateAsync(It.IsAny<DiabitsUser>(), request.Password), Times.Once);
+        _mockUserManager.Verify(um => um.AddToRoleAsync(It.IsAny<DiabitsUser>(), "User"), Times.Once);
 
         var updatedInvite = await _db.Invites.FindAsync(invite.Id);
         Assert.NotNull(updatedInvite!.UsedAt);
@@ -146,12 +145,12 @@ public sealed class AuthServiceTests : IDisposable
         var existingUser = CreateUser(username: "existinguser");
         var request = new RegisterRequest("existinguser", "Password1!", "user@example.com", "INVITE123");
 
-        _userManager.Setup(um => um.FindByNameAsync(request.Username)).ReturnsAsync(existingUser);
+        _mockUserManager.Setup(um => um.FindByNameAsync(request.Username)).ReturnsAsync(existingUser);
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _authService.RegisterAsync(request));
         Assert.Equal("Username already taken", ex.Message);
 
-        _userManager.Verify(um => um.CreateAsync(It.IsAny<DiabitsUser>(), It.IsAny<string>()), Times.Never);
+        _mockUserManager.Verify(um => um.CreateAsync(It.IsAny<DiabitsUser>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -190,8 +189,8 @@ public sealed class AuthServiceTests : IDisposable
         var refreshToken = "valid_refresh_token";
         await SeedRefreshToken(user.Id, refreshToken, expiresAt: DateTime.UtcNow.AddDays(30));
 
-        _userManager.Setup(um => um.FindByIdAsync(user.Id)).ReturnsAsync(user);
-        _userManager.Setup(um => um.GetRolesAsync(user)).ReturnsAsync(["User"]);
+        _mockUserManager.Setup(um => um.FindByIdAsync(user.Id)).ReturnsAsync(user);
+        _mockUserManager.Setup(um => um.GetRolesAsync(user)).ReturnsAsync(["User"]);
 
         var result = await _authService.RefreshAccessTokenAsync(refreshToken);
 
@@ -216,7 +215,7 @@ public sealed class AuthServiceTests : IDisposable
                 createdAt: DateTime.UtcNow.AddDays(-31));
 
             if (!isExpired)
-                _userManager.Setup(um => um.FindByIdAsync("id")).ReturnsAsync((DiabitsUser)null!);
+                _mockUserManager.Setup(um => um.FindByIdAsync("id")).ReturnsAsync((DiabitsUser)null!);
         }
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _authService.RefreshAccessTokenAsync(refreshToken));
@@ -274,9 +273,9 @@ public sealed class AuthServiceTests : IDisposable
 
     private void SetupValidLogin(DiabitsUser user, LoginRequest request, string[] roles)
     {
-        _userManager.Setup(um => um.FindByNameAsync(request.Username)).ReturnsAsync(user);
-        _userManager.Setup(um => um.CheckPasswordAsync(user, request.Password)).ReturnsAsync(true);
-        _userManager.Setup(um => um.GetRolesAsync(user)).ReturnsAsync(roles);
+        _mockUserManager.Setup(um => um.FindByNameAsync(request.Username)).ReturnsAsync(user);
+        _mockUserManager.Setup(um => um.CheckPasswordAsync(user, request.Password)).ReturnsAsync(true);
+        _mockUserManager.Setup(um => um.GetRolesAsync(user)).ReturnsAsync(roles);
     }
 
     private async Task<Invite> SeedInvite(string code, string email, DateTime? usedAt)

@@ -11,7 +11,6 @@ public class Menstruation : HealthDataPoint
     public FlowEnum Flow { get; set; }
 }
 
-//TODO Use enum in app as well
 public enum FlowEnum
 {
     SPOTTING,

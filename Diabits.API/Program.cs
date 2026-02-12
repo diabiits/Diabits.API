@@ -1,14 +1,33 @@
 using Diabits.API.Configuration;
 using Diabits.API.Data;
+using Diabits.API.Data.Mapping;
+using Diabits.API.Helpers.Mapping;
+using Diabits.API.Interfaces;
 using Diabits.API.Models;
+using Diabits.API.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
+builder.Services.AddEndpointsApiExplorer(); 
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddSingleton<NumericMapper>();
+builder.Services.AddSingleton<WorkoutMapper>();
+builder.Services.AddSingleton<ManualInputMapper>();
+builder.Services.AddSingleton<MapperFactory>();
+
 
 // Register EF Core DbContext (custom DbContext for domain models) and configure SQL Server connection.
 builder.Services.AddDbContext<DiabitsDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DiabitsDb")));
@@ -21,6 +40,11 @@ builder.Services.AddIdentity<DiabitsUser, IdentityRole>()
 // Register custom service extensions 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddSwaggerWithAuth();
+
+builder.Services.AddScoped<IHealthDataService, HealthDataService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IInviteService, InviteService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 
@@ -38,8 +62,9 @@ else
     app.UseHttpsRedirection();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

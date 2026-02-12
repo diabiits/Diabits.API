@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Diabits.API.Models.HealthDataPoints.ManualInput;
+using System.Text.Json.Serialization;
 
 namespace Diabits.API.DTOs.HealthDataPoints;
 
@@ -13,7 +14,7 @@ public class ManualInputDto : HealthDataPointBaseDto
 
     // When the DTO represents a menstruation entry this string holds the flow category (e.g., "LIGHT")
     [JsonPropertyName("flow")]
-    public string? Flow { get; set; }
+    public FlowEnum Flow { get; set; }
 }
 
 public class MedicationValueDto

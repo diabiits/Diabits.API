@@ -7,10 +7,9 @@ namespace Diabits.API.Controllers;
 
 [Route("[controller]")]
 [ApiController]
-public class AuthController(IAuthService authService, ILogger<AuthController> logger) : ControllerBase
+public class AuthController(IAuthService authService) : ControllerBase
 {
     private readonly IAuthService _authService = authService;
-    private readonly ILogger<AuthController> _logger = logger;
 
     [AllowAnonymous]
     [HttpPost("register")]
@@ -23,12 +22,10 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
         }
         catch (InvalidOperationException ex)
         {
-            // Service throws InvalidOperationException for expected user-facing errors (email already used etc)
             return BadRequest(error: ex.Message);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error while registering");
             return Problem(statusCode: 500, detail: "An error occurred");
         }
     }
@@ -49,7 +46,6 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error while logging in");
             return Problem(statusCode: 500, detail: "An error occurred");
         }
     }
@@ -71,7 +67,6 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error while logging out");
             return Problem(statusCode: 500, detail: "An error occurred");
         }
     }
@@ -91,12 +86,10 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
         catch (InvalidOperationException e)
         {
             // Invalid/expired refresh token results in 401 to signal the client to reauthenticate.
-            _logger.LogWarning(e, "Invalid refresh token attempt");
             return Unauthorized(value: e.Message);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error while refreshing token");
             return Problem(statusCode: 500, detail: "An error occurred");
         }
     }

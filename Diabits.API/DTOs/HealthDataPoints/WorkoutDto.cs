@@ -13,12 +13,6 @@ public class WorkoutDto : HealthDataPointBaseDto
 
 public class WorkoutHealthValueDto
 {
-    //TODO Rethink? 
-    // Client-provided type discriminator. 
-    // Used by the client to indicate subtype information; server mapping relies primarily on HealthDataType.
-    [JsonPropertyName("__type")]
-    public string TypeIndicator { get; set; } = string.Empty;
-
     [JsonPropertyName("workoutActivityType")]
     public string ActivityType { get; set; } = string.Empty;
 

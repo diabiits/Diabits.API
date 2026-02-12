@@ -9,5 +9,8 @@ public record RefreshTokenRequest(string RefreshToken);
 
 public record CreateInviteRequest(string Email);
 
-public record HealthConnectRequest(IEnumerable<NumericDto> Numerics, IEnumerable<WorkoutDto> Workouts, DateTime ClientSyncTime);
+public record HealthConnectRequest(IEnumerable<NumericDto> Numerics, IEnumerable<WorkoutDto> Workouts);
 public record ManualInputRequest(IEnumerable<ManualInputDto> Items);
+public record BatchDeleteManualInputRequest(IEnumerable<int> Ids);
+
+public record LastSyncRequest(DateTime SyncTime);

@@ -1,3 +1,4 @@
+using Diabits.API.Models.HealthDataPoints;
 using System.Text.Json.Serialization;
 
 namespace Diabits.API.DTOs.HealthDataPoints;
@@ -9,11 +10,10 @@ public abstract class HealthDataPointBaseDto
     [JsonPropertyName("id")]
     public int? Id { get; set; }
 
-    //TODO JsonConverter for polymorphic deserialization based on this type discriminator value, to avoid manual mapping in the service layer?
-    // String representation of the health data type. Used by mapping logic to decide which concrete entity to create.
     [JsonPropertyName("type")]
-    public string HealthDataType { get; set; } = string.Empty;
+    public HealthDataType HealthDataType { get; set; }
 
+    //TODO Ensure that not used and then delete
     [JsonPropertyName("unit")]
     public string Unit { get; set; } = string.Empty;
 

@@ -17,7 +17,7 @@ public class AuthControllerTests
     {
         _mockAuthService = new Mock<IAuthService>();
         _mockLogger = new Mock<ILogger<AuthController>>();
-        _controller = new AuthController(_mockAuthService.Object, _mockLogger.Object);
+        _controller = new AuthController(_mockAuthService.Object);
     }
 
     // Register endpoint tests
