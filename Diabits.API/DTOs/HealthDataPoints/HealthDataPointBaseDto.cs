@@ -13,10 +13,6 @@ public abstract class HealthDataPointBaseDto
     [JsonPropertyName("type")]
     public HealthDataType HealthDataType { get; set; }
 
-    //TODO Ensure that not used and then delete
-    [JsonPropertyName("unit")]
-    public string Unit { get; set; } = string.Empty;
-
     [JsonPropertyName("dateFrom")]
     public DateTime DateFrom { get; set; }
 

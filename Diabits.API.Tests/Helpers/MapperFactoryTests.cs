@@ -4,9 +4,6 @@ using Diabits.API.Helpers.Mapping;
 using Diabits.API.Models.HealthDataPoints;
 using Diabits.API.Models.HealthDataPoints.HealthConnect;
 using Diabits.API.Models.HealthDataPoints.ManualInput;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Diabits.API.Tests.Helpers;
 
