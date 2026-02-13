@@ -59,8 +59,9 @@ public class UserController(IUserService userService) : ControllerBase
 
         try
         {
-            await _userService.UpdateAccount(userId, request);
-            return Ok("Account updated successfully");
+            var accessToken = await _userService.UpdateAccount(userId, request);
+            //TODO Refactor
+            return Ok(new AuthResponse(accessToken, "TESTING"));
         }
         catch (InvalidOperationException e)
         {

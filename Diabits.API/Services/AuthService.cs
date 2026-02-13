@@ -121,15 +121,17 @@ public class AuthService(UserManager<DiabitsUser> userManager, DiabitsDbContext 
         return new AuthResponse(AccessToken: accessToken, RefreshToken: refreshToken);
     }
 
+    //TODO Public until I've decided if update of access token on update of username
     /// <summary>
     /// Build an access token (Json Web Token) for the provided user including role claims.
     /// Uses symmetric key from configuration: "Jwt:Key", and issuer/audience from config.
     /// </summary>
-    private async Task<string> GenerateAccessTokenAsync(DiabitsUser user)
+    public async Task<string> GenerateAccessTokenAsync(DiabitsUser user)
     {
         var claims = new List<Claim>
         {
             new(ClaimTypes.Name, user.UserName!),
+            new(ClaimTypes.Email, user.Email!),
             new(ClaimTypes.NameIdentifier, user.Id),
             new(JwtRegisteredClaimNames.Jti, user.Id),
         };

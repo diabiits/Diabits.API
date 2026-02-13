@@ -7,10 +7,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Diabits.API.Services;
 
-public class UserService(DiabitsDbContext dbContext, UserManager<DiabitsUser> userManager) : IUserService
+public class UserService(DiabitsDbContext dbContext, UserManager<DiabitsUser> userManager, IAuthService authService) : IUserService
 {
     private readonly DiabitsDbContext _dbContext = dbContext;
     private readonly UserManager<DiabitsUser> _userManager = userManager;
+    //TODO Refactor use of authservice - move update of password and username to authservice?
+    private readonly IAuthService _authService = authService;
 
     public async Task<DateTime?> GetLastSuccessSyncForUserAsync(string userId)
     {
@@ -24,7 +26,7 @@ public class UserService(DiabitsDbContext dbContext, UserManager<DiabitsUser> us
     public async Task UpdateLastSuccessSyncForUserAsync(string userId, DateTime newSync) =>
         await _dbContext.Users.Where(u => u.Id == userId).ExecuteUpdateAsync(s => s.SetProperty(u => u.LastSyncSuccess, newSync));
 
-    public async Task UpdateAccount(string userId, UpdateAccountRequest request)
+    public async Task<string> UpdateAccount(string userId, UpdateAccountRequest request)
     {
         var user = await _userManager.FindByIdAsync(userId)
             ?? throw new InvalidOperationException("User not found");
@@ -33,7 +35,7 @@ public class UserService(DiabitsDbContext dbContext, UserManager<DiabitsUser> us
         var wantsPasswordChange = !string.IsNullOrWhiteSpace(request.NewPassword);
 
         if (!wantsUsernameChange && !wantsPasswordChange)
-            return;
+            throw new InvalidOperationException("No new values provided");
 
         var currentPasswordOk = await _userManager.CheckPasswordAsync(user, request.CurrentPassword);
         if (!currentPasswordOk)
@@ -43,7 +45,7 @@ public class UserService(DiabitsDbContext dbContext, UserManager<DiabitsUser> us
         {
             var existing = await _userManager.FindByNameAsync(request.NewUsername!);
             if (existing is not null && existing.Id != user.Id)
-                throw new InvalidOperationException("Username is already taken.");
+                throw new InvalidOperationException("Username is already taken");
 
             var usernameResult = await _userManager.SetUserNameAsync(user, request.NewUsername!);
             ThrowIfFailed(usernameResult);
@@ -58,6 +60,8 @@ public class UserService(DiabitsDbContext dbContext, UserManager<DiabitsUser> us
 
             ThrowIfFailed(passwordResult);
         }
+
+        return await _authService.GenerateAccessTokenAsync(user);
     }
     private static void ThrowIfFailed(IdentityResult result)
     {
