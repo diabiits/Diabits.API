@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Diabits.API.Controllers;
 
+//TODO Cancellation tokens
 [Route("[controller]")]
 [ApiController]
 public class AuthController(IAuthService authService) : ControllerBase
@@ -71,6 +72,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         }
     }
 
+    //TODO Maybe the refresh token can stay serverside? Does the user need it?
     /// <summary>
     /// Public endpoint to exchange a refresh token for new access token.
     /// </summary>

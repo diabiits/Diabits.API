@@ -49,4 +49,26 @@ public class UserController(IUserService userService) : ControllerBase
             return Problem(statusCode: 500, detail: "An error occurred");
         }
     }
+
+    [HttpPut("updateAccount")]
+    [Authorize]
+    public async Task<IActionResult> UpdateAccount([FromBody] UpdateAccountRequest request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized();
+
+        try
+        {
+            await _userService.UpdateAccount(userId, request);
+            return Ok("Account updated successfully");
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(e.Message);
+        }
+        catch (Exception e)
+        {
+            return Problem(statusCode: 500, detail: "An error occurred");
+        }
+    }
 }

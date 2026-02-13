@@ -20,6 +20,21 @@ builder.Services
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
+//TODO Refactor
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("BlazorWasm", policy =>
+    {
+        policy
+            .WithOrigins(
+                "https://localhost:7214",
+                "https://192.168.1.43:7214"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddEndpointsApiExplorer(); 
 builder.Services.AddSwaggerGen();
 
@@ -62,7 +77,10 @@ else
     app.UseHttpsRedirection();
 }
 
+//TODO Refactor
 //app.UseHttpsRedirection();
+app.UseRouting();
+app.UseCors("BlazorWasm");
 
 app.UseAuthentication();
 app.UseAuthorization();

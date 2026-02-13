@@ -6,6 +6,7 @@ namespace Diabits.API.DTOs;
 public record RegisterRequest(string Username, string Password, string Email, string InviteCode);
 public record LoginRequest(string Username, string Password);
 public record RefreshTokenRequest(string RefreshToken);
+public record UpdateAccountRequest(string CurrentPassword, string? NewPassword, string? NewUsername);
 
 public record CreateInviteRequest(string Email);
 
