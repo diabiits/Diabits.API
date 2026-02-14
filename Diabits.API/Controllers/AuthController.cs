@@ -1,7 +1,9 @@
 ﻿using Diabits.API.DTOs;
 using Diabits.API.Interfaces;
+using Diabits.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Diabits.API.Controllers;
 
@@ -65,6 +67,33 @@ public class AuthController(IAuthService authService) : ControllerBase
         {
             await _authService.LogoutAsync(request.RefreshToken);
             return Ok();
+        }
+        catch (Exception e)
+        {
+            return Problem(statusCode: 500, detail: "An error occurred");
+        }
+    }
+
+    [HttpPut("UpdateCredentials")]
+    [Authorize]
+    public async Task<IActionResult> UpdateCredentials([FromBody] UpdateCredentialsRequest request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized();
+
+        try
+        {
+            var accessToken = await _authService.UpdateCredentialsAsync(userId, request);
+            //TODO Refactor
+            return Ok(new AuthResponse(accessToken, "TESTING"));
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(e.Message);
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            return Unauthorized(e.Message);
         }
         catch (Exception e)
         {

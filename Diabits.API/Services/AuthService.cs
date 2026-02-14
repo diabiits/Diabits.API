@@ -96,6 +96,59 @@ public class AuthService(UserManager<DiabitsUser> userManager, DiabitsDbContext 
         await _dbContext.SaveChangesAsync();
     }
 
+    public async Task<string> UpdateCredentialsAsync(string userId, UpdateCredentialsRequest request)
+    {
+        var user = await _userManager.FindByIdAsync(userId)
+            ?? throw new InvalidOperationException("User not found");
+
+        var wantsUsernameChange = !string.IsNullOrWhiteSpace(request.NewUsername);
+        var wantsPasswordChange = !string.IsNullOrWhiteSpace(request.NewPassword);
+
+        if (!wantsUsernameChange && !wantsPasswordChange)
+            throw new InvalidOperationException("No new values provided");
+
+        var currentPasswordOk = await _userManager.CheckPasswordAsync(user, request.CurrentPassword);
+        if (!currentPasswordOk)
+            throw new UnauthorizedAccessException("Current password is incorrect");
+
+        var oldUsername = user.UserName;
+
+        if (wantsUsernameChange)
+        {
+            var existing = await _userManager.FindByNameAsync(request.NewUsername!);
+            if (existing is not null && existing.Id != user.Id)
+                throw new InvalidOperationException("Username is already taken");
+
+            var usernameResult = await _userManager.SetUserNameAsync(user, request.NewUsername!);
+
+            if (!usernameResult.Succeeded) 
+                throw new InvalidOperationException("Username change failed. No changes made.");
+        }
+
+        if (wantsPasswordChange)
+        {
+            var passwordResult = await _userManager.ChangePasswordAsync(
+                user,
+                request.CurrentPassword,
+                request.NewPassword!
+            );
+
+            if (!passwordResult.Succeeded)
+            {
+                if (wantsUsernameChange && user.UserName != oldUsername)
+                {
+                    var rollback = await _userManager.SetUserNameAsync(user, oldUsername);
+                    if (!rollback.Succeeded)
+                        throw new InvalidOperationException("Password change failed and username rollback failed.");
+                }
+
+                throw new InvalidOperationException("Password change failed. No changes made.");
+            }
+        }
+
+        return await GenerateAccessTokenAsync(user);
+    }
+
     /// <summary>
     /// Validate a refresh token and issue a new access token (keeps the same refresh token).
     /// </summary>
@@ -121,12 +174,11 @@ public class AuthService(UserManager<DiabitsUser> userManager, DiabitsDbContext 
         return new AuthResponse(AccessToken: accessToken, RefreshToken: refreshToken);
     }
 
-    //TODO Public until I've decided if update of access token on update of username
     /// <summary>
     /// Build an access token (Json Web Token) for the provided user including role claims.
     /// Uses symmetric key from configuration: "Jwt:Key", and issuer/audience from config.
     /// </summary>
-    public async Task<string> GenerateAccessTokenAsync(DiabitsUser user)
+    private async Task<string> GenerateAccessTokenAsync(DiabitsUser user)
     {
         var claims = new List<Claim>
         {

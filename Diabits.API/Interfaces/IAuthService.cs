@@ -9,9 +9,5 @@ public interface IAuthService
     Task<AuthResponse> RegisterAsync(RegisterRequest request);
     Task<AuthResponse> RefreshAccessTokenAsync(string refreshToken);
     Task LogoutAsync(string refreshToken);
-
-    //TODO Remove after cred update done
-    Task<string> GenerateAccessTokenAsync(DiabitsUser user);
-
-
+    Task<string> UpdateCredentialsAsync(string userId, UpdateCredentialsRequest request);
 }

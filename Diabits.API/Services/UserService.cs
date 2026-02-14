@@ -10,9 +10,6 @@ namespace Diabits.API.Services;
 public class UserService(DiabitsDbContext dbContext, UserManager<DiabitsUser> userManager, IAuthService authService) : IUserService
 {
     private readonly DiabitsDbContext _dbContext = dbContext;
-    private readonly UserManager<DiabitsUser> _userManager = userManager;
-    //TODO Refactor use of authservice - move update of password and username to authservice?
-    private readonly IAuthService _authService = authService;
 
     public async Task<DateTime?> GetLastSuccessSyncForUserAsync(string userId)
     {
@@ -25,49 +22,4 @@ public class UserService(DiabitsDbContext dbContext, UserManager<DiabitsUser> us
 
     public async Task UpdateLastSuccessSyncForUserAsync(string userId, DateTime newSync) =>
         await _dbContext.Users.Where(u => u.Id == userId).ExecuteUpdateAsync(s => s.SetProperty(u => u.LastSyncSuccess, newSync));
-
-    public async Task<string> UpdateAccount(string userId, UpdateAccountRequest request)
-    {
-        var user = await _userManager.FindByIdAsync(userId)
-            ?? throw new InvalidOperationException("User not found");
-
-        var wantsUsernameChange = !string.IsNullOrWhiteSpace(request.NewUsername);
-        var wantsPasswordChange = !string.IsNullOrWhiteSpace(request.NewPassword);
-
-        if (!wantsUsernameChange && !wantsPasswordChange)
-            throw new InvalidOperationException("No new values provided");
-
-        var currentPasswordOk = await _userManager.CheckPasswordAsync(user, request.CurrentPassword);
-        if (!currentPasswordOk)
-            throw new UnauthorizedAccessException("Current password is incorrect");
-
-        if (wantsUsernameChange)
-        {
-            var existing = await _userManager.FindByNameAsync(request.NewUsername!);
-            if (existing is not null && existing.Id != user.Id)
-                throw new InvalidOperationException("Username is already taken");
-
-            var usernameResult = await _userManager.SetUserNameAsync(user, request.NewUsername!);
-            ThrowIfFailed(usernameResult);
-        }
-
-        if (wantsPasswordChange)
-        {
-            var passwordResult = await _userManager.ChangePasswordAsync(
-                user,
-                request.CurrentPassword,
-                request.NewPassword!);
-
-            ThrowIfFailed(passwordResult);
-        }
-
-        return await _authService.GenerateAccessTokenAsync(user);
-    }
-    private static void ThrowIfFailed(IdentityResult result)
-    {
-        if (result.Succeeded) return;
-
-        var msg = string.Join(" ", result.Errors.Select(e => e.Description));
-        throw new InvalidOperationException(msg);
-    }
 }
