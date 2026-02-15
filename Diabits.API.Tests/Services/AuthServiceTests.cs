@@ -46,7 +46,6 @@ public sealed class AuthServiceTests : IDisposable
 
         Assert.NotNull(result.AccessToken);
         Assert.NotNull(result.RefreshToken);
-        Assert.True(result.ExpiresAt > DateTime.UtcNow);
 
         var stored = await _db.RefreshTokens.SingleAsync(rt => rt.UserId == user.Id);
         Assert.True(stored.ExpiresAt > DateTime.UtcNow.AddDays(29));
@@ -64,7 +63,9 @@ public sealed class AuthServiceTests : IDisposable
 
         var token = new JwtSecurityTokenHandler().ReadJwtToken(result.AccessToken);
 
-        Assert.Equal(user.Id, token.Claims.Single(c => c.Type == JwtRegisteredClaimNames.Sub).Value);
+        Assert.Equal(user.Id, token.Claims.Single(c => c.Type == ClaimTypes.NameIdentifier).Value);
+        Assert.Equal(user.UserName, token.Claims.Single(c => c.Type == ClaimTypes.Name).Value);
+        Assert.Equal(user.Email, token.Claims.Single(c => c.Type == ClaimTypes.Email).Value);
         Assert.Contains(token.Claims, c => c.Type == ClaimTypes.Role && c.Value == "User");
         Assert.Contains(token.Claims, c => c.Type == ClaimTypes.Role && c.Value == "Admin");
     }
@@ -195,7 +196,6 @@ public sealed class AuthServiceTests : IDisposable
         var result = await _authService.RefreshAccessTokenAsync(refreshToken);
 
         Assert.NotNull(result.AccessToken);
-        Assert.True(result.ExpiresAt > DateTime.UtcNow);
         Assert.Equal(refreshToken, result.RefreshToken);
     }
 
@@ -223,7 +223,7 @@ public sealed class AuthServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GeneratedTokens_HaveExpectedExpirations_AndRefreshTokenStoredAsHash()
+    public async Task GeneratedTokens_HaveRefreshTokenStoredAsHash()
     {
         var user = CreateUser(id: "id");
         var request = new LoginRequest("user", "Password1!");
@@ -231,10 +231,6 @@ public sealed class AuthServiceTests : IDisposable
         SetupValidLogin(user, request, roles: ["User"]);
 
         var result = await _authService.LoginAsync(request);
-
-        Assert.True(result.ExpiresAt > DateTime.UtcNow);
-        Assert.True(result.ExpiresAt <= DateTime.UtcNow.AddHours(3).AddSeconds(10));
-
         var stored = await _db.RefreshTokens.SingleAsync(rt => rt.UserId == user.Id);
         Assert.NotEqual(result.RefreshToken, stored.TokenHash);
         Assert.Equal(44, stored.TokenHash.Length);

@@ -26,7 +26,7 @@ public class AuthControllerTests
     {
         // Arrange
         var request = new RegisterRequest("user", "user@example.com", "Password1!", "code");
-        var expectedResponse = new AuthResponse("access_token", DateTime.UtcNow.AddHours(3), "refresh_token");
+        var expectedResponse = new AuthResponse("access_token", "refresh_token");
 
         _mockAuthService
             .Setup(s => s.RegisterAsync(request))
@@ -87,7 +87,7 @@ public class AuthControllerTests
     {
         // Arrange
         var request = new LoginRequest("user", "Password1!");
-        var expectedResponse = new AuthResponse("access_token", DateTime.UtcNow.AddHours(3), "refresh_token");
+        var expectedResponse = new AuthResponse("access_token", "refresh_token");
 
         _mockAuthService
             .Setup(s => s.LoginAsync(request))
@@ -183,7 +183,7 @@ public class AuthControllerTests
     {
         // Arrange
         var request = new RefreshTokenRequest("valid_refresh_token");
-        var expectedResponse = new AuthResponse("new_access_token", DateTime.UtcNow.AddHours(3), "valid_refresh_token");
+        var expectedResponse = new AuthResponse("new_access_token", "valid_refresh_token");
 
         _mockAuthService
             .Setup(s => s.RefreshAccessTokenAsync(request.RefreshToken))
