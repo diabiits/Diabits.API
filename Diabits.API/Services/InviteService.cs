@@ -10,8 +10,18 @@ public class InviteService(DiabitsDbContext dbContext) : IInviteService
 {
     private readonly DiabitsDbContext _dbContext = dbContext;
 
-    public async Task<IEnumerable<Invite>> GetAllInvitesAsync()
-        => await _dbContext.Invites.ToListAsync();
+    public async Task<List<InviteResponse>> GetAllInvitesAsync()
+    {
+        return await _dbContext.Invites
+            .AsNoTracking()
+            .Select(i => new InviteResponse(
+                i.Email, 
+                i.Code, 
+                i.CreatedAt, 
+                i.UsedAt, 
+                i.UsedBy != null ? i.UsedBy.UserName : null
+            )).ToListAsync();
+    }
 
     public async Task<Invite> CreateInviteAsync(CreateInviteRequest request)
     {

@@ -1,7 +1,7 @@
 ﻿using Diabits.API.Models;
 using Microsoft.AspNetCore.Identity;
 
-namespace Diabits.API.Configuration;
+namespace Diabits.API.Data;
 
 /// <summary>
 /// Ensures required Identity roles exist and creates an initial admin user from configuration if missing.

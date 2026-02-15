@@ -5,6 +5,6 @@ namespace Diabits.API.Interfaces;
 
 public interface IInviteService
 {
-    Task<IEnumerable<Invite>> GetAllInvitesAsync();
+    Task<List<InviteResponse>> GetAllInvitesAsync();
     Task<Invite> CreateInviteAsync(CreateInviteRequest request);
 }

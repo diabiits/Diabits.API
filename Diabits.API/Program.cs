@@ -1,16 +1,48 @@
 using Diabits.API.Configuration;
 using Diabits.API.Data;
+using Diabits.API.Data.Mapping;
+using Diabits.API.Helpers.Mapping;
+using Diabits.API.Interfaces;
 using Diabits.API.Models;
+using Diabits.API.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
+//TODO Refactor
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("BlazorWasm", policy =>
+    {
+        policy
+            .WithOrigins(
+                "https://localhost:7214",
+                "https://192.168.1.43:7214"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+builder.Services.AddEndpointsApiExplorer(); 
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddSingleton<NumericMapper>();
+builder.Services.AddSingleton<WorkoutMapper>();
+builder.Services.AddSingleton<ManualInputMapper>();
+builder.Services.AddSingleton<MapperFactory>();
+
 
 // Register EF Core DbContext (custom DbContext for domain models) and configure SQL Server connection.
 builder.Services.AddDbContext<DiabitsDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DiabitsDb")));
@@ -22,17 +54,35 @@ builder.Services.AddIdentity<DiabitsUser, IdentityRole>()
 
 // Register custom service extensions 
 builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddSwaggerWithAuth();
+
+builder.Services.AddScoped<IHealthDataService, HealthDataService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IInviteService, InviteService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "diabits API V1");
+        c.RoutePrefix = string.Empty;
+    });
+}
+else
+{
+    app.UseHttpsRedirection();
 }
 
-app.UseHttpsRedirection();
+//TODO Refactor
+//app.UseHttpsRedirection();
+app.UseRouting();
+app.UseCors("BlazorWasm");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
@@ -45,7 +95,7 @@ using (var scope = app.Services.CreateScope())
 
     var pendingMigrations = dbContext.Database.GetPendingMigrations();
     if (pendingMigrations.Any())
-        await dbContext.Database.MigrateAsync(); // Apply migrations automatically when present.
+        await dbContext.Database.MigrateAsync();
 
     await IdentitySeeder.SeedRolesAndAdminAsync(services);
 }

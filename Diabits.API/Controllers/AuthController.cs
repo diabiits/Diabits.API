@@ -1,16 +1,18 @@
 ﻿using Diabits.API.DTOs;
 using Diabits.API.Interfaces;
+using Diabits.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Diabits.API.Controllers;
 
+//TODO Cancellation tokens
 [Route("[controller]")]
 [ApiController]
-public class AuthController(IAuthService authService, ILogger<AuthController> logger) : ControllerBase
+public class AuthController(IAuthService authService) : ControllerBase
 {
     private readonly IAuthService _authService = authService;
-    private readonly ILogger<AuthController> _logger = logger;
 
     [AllowAnonymous]
     [HttpPost("register")]
@@ -23,12 +25,10 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
         }
         catch (InvalidOperationException ex)
         {
-            // Service throws InvalidOperationException for expected user-facing errors (email already used etc)
             return BadRequest(error: ex.Message);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error while registering");
             return Problem(statusCode: 500, detail: "An error occurred");
         }
     }
@@ -49,7 +49,6 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error while logging in");
             return Problem(statusCode: 500, detail: "An error occurred");
         }
     }
@@ -71,11 +70,38 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error while logging out");
             return Problem(statusCode: 500, detail: "An error occurred");
         }
     }
 
+    [HttpPut("UpdateCredentials")]
+    [Authorize]
+    public async Task<IActionResult> UpdateCredentials([FromBody] UpdateCredentialsRequest request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized();
+
+        try
+        {
+            var accessToken = await _authService.UpdateCredentialsAsync(userId, request);
+            //TODO Refactor
+            return Ok(new AuthResponse(accessToken, "TESTING"));
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(e.Message);
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            return Unauthorized(e.Message);
+        }
+        catch (Exception e)
+        {
+            return Problem(statusCode: 500, detail: "An error occurred");
+        }
+    }
+
+    //TODO Maybe the refresh token can stay serverside? Does the user need it?
     /// <summary>
     /// Public endpoint to exchange a refresh token for new access token.
     /// </summary>
@@ -91,12 +117,10 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
         catch (InvalidOperationException e)
         {
             // Invalid/expired refresh token results in 401 to signal the client to reauthenticate.
-            _logger.LogWarning(e, "Invalid refresh token attempt");
             return Unauthorized(value: e.Message);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error while refreshing token");
             return Problem(statusCode: 500, detail: "An error occurred");
         }
     }

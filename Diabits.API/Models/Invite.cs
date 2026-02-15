@@ -8,7 +8,7 @@ public class Invite
     public int Id { get; set; }
     public string Email { get; set; } = null!;
     public string Code { get; set; } = Guid.NewGuid().ToString();
-    public DateTime CreatedAt { get; init; } = DateTime.Now;
+    public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DiabitsUser? UsedBy { get; set; }
 
     // When the invite was used. Backed by a private field to enforce single-use.

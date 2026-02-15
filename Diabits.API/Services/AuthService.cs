@@ -31,10 +31,10 @@ public class AuthService(UserManager<DiabitsUser> userManager, DiabitsDbContext 
             throw new InvalidOperationException("Invalid credentials");
 
         // Create access- and refresh token on successful authentication
-        var (accessToken, expiration) = await GenerateAccessTokenAsync(user);
+        var accessToken = await GenerateAccessTokenAsync(user);
         var refreshToken = await GenerateRefreshTokenAsync(user);
 
-        return new AuthResponse(accessToken, expiration, refreshToken);
+        return new AuthResponse(accessToken, refreshToken);
     }
 
 
@@ -74,10 +74,10 @@ public class AuthService(UserManager<DiabitsUser> userManager, DiabitsDbContext 
         await _dbContext.SaveChangesAsync();
 
         // Issue tokens for the newly created user.
-        var (accessToken, expiration) = await GenerateAccessTokenAsync(newUser);
+        var accessToken = await GenerateAccessTokenAsync(newUser);
         var refreshToken = await GenerateRefreshTokenAsync(newUser);
 
-        return new AuthResponse(accessToken, expiration, refreshToken);
+        return new AuthResponse(accessToken, refreshToken);
     }
 
     /// <summary>
@@ -94,6 +94,59 @@ public class AuthService(UserManager<DiabitsUser> userManager, DiabitsDbContext 
         // Delete the refresh token so it cannot be used again.
         _dbContext.RefreshTokens.Remove(stored);
         await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task<string> UpdateCredentialsAsync(string userId, UpdateCredentialsRequest request)
+    {
+        var user = await _userManager.FindByIdAsync(userId)
+            ?? throw new InvalidOperationException("User not found");
+
+        var wantsUsernameChange = !string.IsNullOrWhiteSpace(request.NewUsername);
+        var wantsPasswordChange = !string.IsNullOrWhiteSpace(request.NewPassword);
+
+        if (!wantsUsernameChange && !wantsPasswordChange)
+            throw new InvalidOperationException("No new values provided");
+
+        var currentPasswordOk = await _userManager.CheckPasswordAsync(user, request.CurrentPassword);
+        if (!currentPasswordOk)
+            throw new UnauthorizedAccessException("Current password is incorrect");
+
+        var oldUsername = user.UserName;
+
+        if (wantsUsernameChange)
+        {
+            var existing = await _userManager.FindByNameAsync(request.NewUsername!);
+            if (existing is not null && existing.Id != user.Id)
+                throw new InvalidOperationException("Username is already taken");
+
+            var usernameResult = await _userManager.SetUserNameAsync(user, request.NewUsername!);
+
+            if (!usernameResult.Succeeded) 
+                throw new InvalidOperationException("Username change failed. No changes made.");
+        }
+
+        if (wantsPasswordChange)
+        {
+            var passwordResult = await _userManager.ChangePasswordAsync(
+                user,
+                request.CurrentPassword,
+                request.NewPassword!
+            );
+
+            if (!passwordResult.Succeeded)
+            {
+                if (wantsUsernameChange && user.UserName != oldUsername)
+                {
+                    var rollback = await _userManager.SetUserNameAsync(user, oldUsername);
+                    if (!rollback.Succeeded)
+                        throw new InvalidOperationException("Password change failed and username rollback failed.");
+                }
+
+                throw new InvalidOperationException("Password change failed. No changes made.");
+            }
+        }
+
+        return await GenerateAccessTokenAsync(user);
     }
 
     /// <summary>
@@ -116,41 +169,42 @@ public class AuthService(UserManager<DiabitsUser> userManager, DiabitsDbContext 
             ?? throw new InvalidOperationException("User not found");
 
         // Issue a new access token
-        var (accessToken, expiration) = await GenerateAccessTokenAsync(user);
+        var accessToken = await GenerateAccessTokenAsync(user);
 
-        return new AuthResponse(AccessToken: accessToken, expiration, refreshToken);
+        return new AuthResponse(AccessToken: accessToken, RefreshToken: refreshToken);
     }
 
     /// <summary>
     /// Build an access token (Json Web Token) for the provided user including role claims.
     /// Uses symmetric key from configuration: "Jwt:Key", and issuer/audience from config.
     /// </summary>
-    private async Task<(string Token, DateTime Expiration)> GenerateAccessTokenAsync(DiabitsUser user)
+    private async Task<string> GenerateAccessTokenAsync(DiabitsUser user)
     {
-        var roles = await _userManager.GetRolesAsync(user);
         var claims = new List<Claim>
         {
-            // Use subject claim to carry the user id so controllers can extract ClaimTypes.NameIdentifier or JwtRegisteredClaimNames.Sub.
-            new(JwtRegisteredClaimNames.Sub, user.Id),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(ClaimTypes.Name, user.UserName!),
+            new(ClaimTypes.Email, user.Email!),
+            new(ClaimTypes.NameIdentifier, user.Id),
+            new(JwtRegisteredClaimNames.Jti, user.Id),
         };
 
         // Add role claims so authorization attributes like [Authorize(Roles = "Admin")] work.
+        var roles = await _userManager.GetRolesAsync(user);
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
         // Read symmetric key from configuration and create signing credentials.
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+        var creds = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(3),
+            expires: DateTime.UtcNow.AddHours(2),
             signingCredentials: creds
         );
 
-        return (new JwtSecurityTokenHandler().WriteToken(token), token.ValidTo);
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
     /// <summary>
@@ -175,5 +229,4 @@ public class AuthService(UserManager<DiabitsUser> userManager, DiabitsDbContext 
 
         return unhashedToken;
     }
-
 }

@@ -1,4 +1,5 @@
 ﻿using Diabits.API.DTOs;
+using Diabits.API.Models;
 
 namespace Diabits.API.Interfaces;
 
@@ -8,4 +9,5 @@ public interface IAuthService
     Task<AuthResponse> RegisterAsync(RegisterRequest request);
     Task<AuthResponse> RefreshAccessTokenAsync(string refreshToken);
     Task LogoutAsync(string refreshToken);
+    Task<string> UpdateCredentialsAsync(string userId, UpdateCredentialsRequest request);
 }
