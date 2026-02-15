@@ -34,9 +34,23 @@ public class DiabitsDbContext : IdentityDbContext<DiabitsUser>
         // Index to optimize queries that look up menstruation entries per user and day window
         builder.Entity<Menstruation>().HasIndex(m => new { m.UserId, m.StartTime } );
 
+        builder.Entity<RefreshToken>()
+            .HasIndex(r => r.TokenHash)
+            .IsUnique();
+
         // Map the Invite.UsedAt property to the private backing field "_usedAt"
         builder.Entity<Invite>()
             .Property(i => i.UsedAt)
             .HasField("_usedAt");
+
+        builder.Entity<Invite>()
+            .HasIndex(i => i.Email)
+            .IsUnique();
+
+        builder.Entity<Invite>()
+            .HasOne(i => i.UsedBy)
+            .WithOne(u => u.Invite)
+            .HasForeignKey<DiabitsUser>(u => u.InviteId)
+            .IsRequired(false);
     }
 }
