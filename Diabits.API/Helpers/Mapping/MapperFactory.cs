@@ -1,6 +1,7 @@
 ﻿using Diabits.API.Data.Mapping;
 using Diabits.API.DTOs.HealthDataPoints;
 using Diabits.API.Models.HealthDataPoints;
+using Diabits.API.Models.HealthDataPoints.HealthConnect;
 using Diabits.API.Models.HealthDataPoints.ManualInput;
 
 namespace Diabits.API.Helpers.Mapping;
@@ -48,4 +49,19 @@ public sealed class MapperFactory
 
     public void UpdateManualInput(ManualInputDto dto, Menstruation target)
         => _manualInputMapper.UpdateMenstruation(dto, target);
+
+    public HealthDataPointBaseDto ToDto(HealthDataPoint entity)
+    {
+        return entity switch
+        {
+            GlucoseLevel glucose => _numericMapper.ToDto(glucose),
+            HeartRate heartRate => _numericMapper.ToDto(heartRate),
+            Step step => _numericMapper.ToDto(step),
+            SleepSession sleep => _numericMapper.ToDto(sleep),
+            Workout workout => _workoutMapper.ToDto(workout),
+            Medication medication => _manualInputMapper.ToDto(medication),
+            Menstruation menstruation => _manualInputMapper.ToDto(menstruation),
+            _ => throw new InvalidOperationException($"Unsupported entity type: {entity.GetType().Name}")
+        };
+    }
 }

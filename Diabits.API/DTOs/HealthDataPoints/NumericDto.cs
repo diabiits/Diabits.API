@@ -8,7 +8,7 @@ namespace Diabits.API.DTOs.HealthDataPoints;
 public class NumericDto : HealthDataPointBaseDto
 {
     [JsonPropertyName("value")]
-    public NumericHealthValueDto HealthValue { get; set; } = null!;
+    public NumericHealthValueDto HealthValue { get; set; } = new();
 }
 
 public class NumericHealthValueDto

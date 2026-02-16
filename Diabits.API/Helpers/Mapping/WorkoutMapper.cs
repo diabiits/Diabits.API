@@ -17,5 +17,14 @@ public partial class WorkoutMapper
     [MapperIgnoreTarget(nameof(HealthDataPoint.User))]
     public partial Workout ToWorkout(WorkoutDto dto);
 
+    [MapProperty(nameof(HealthDataPoint.StartTime), nameof(WorkoutDto.DateFrom))]
+    [MapProperty(nameof(HealthDataPoint.EndTime), nameof(WorkoutDto.DateTo))]
+    [MapProperty(nameof(HealthDataPoint.Type), nameof(WorkoutDto.HealthDataType))]
+    [MapProperty(nameof(Workout.ActivityType), nameof(WorkoutDto.HealthValue) + "." + nameof(WorkoutHealthValueDto.ActivityType))]
+    [MapProperty(nameof(Workout.CaloriesBurned), nameof(WorkoutDto.HealthValue) + "." + nameof(WorkoutHealthValueDto.CaloriesBurned))]
+    public partial WorkoutDto ToDto(Workout entity);
+
     private int Map(double? value) => value.HasValue ? (int)Math.Round(value.Value) : 0;
+
+    private double? MapToNullableDouble(int value) => value > 0 ? value : null;
 }

@@ -1,5 +1,4 @@
 ﻿using Diabits.API.DTOs;
-using Diabits.API.Models;
 
 namespace Diabits.API.Interfaces;
 

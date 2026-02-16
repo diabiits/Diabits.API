@@ -32,13 +32,11 @@ public class DiabitsDbContext : IdentityDbContext<DiabitsUser>
         builder.Entity<Medication>().ToTable("Medications");
 
         // Index to optimize queries that look up menstruation entries per user and day window
+        //TODO Add for others?
         builder.Entity<Menstruation>().HasIndex(m => new { m.UserId, m.StartTime } );
 
-        builder.Entity<RefreshToken>()
-            .HasIndex(r => r.TokenHash)
-            .IsUnique();
+        builder.Entity<GlucoseLevel>().Property(g => g.mmolL).HasPrecision(3, 1);
 
-        // Map the Invite.UsedAt property to the private backing field "_usedAt"
         builder.Entity<Invite>()
             .Property(i => i.UsedAt)
             .HasField("_usedAt");
@@ -52,5 +50,9 @@ public class DiabitsDbContext : IdentityDbContext<DiabitsUser>
             .WithOne(u => u.Invite)
             .HasForeignKey<DiabitsUser>(u => u.InviteId)
             .IsRequired(false);
+
+        builder.Entity<RefreshToken>()
+            .HasIndex(r => r.TokenHash)
+            .IsUnique();
     }
 }

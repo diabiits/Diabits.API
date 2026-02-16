@@ -4,6 +4,7 @@ using Diabits.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Diabits.API.Migrations
 {
     [DbContext(typeof(DiabitsDbContext))]
-    partial class DiabitsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260215225736_SetGlucosePrecision")]
+    partial class SetGlucosePrecision
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -328,9 +331,9 @@ namespace Diabits.API.Migrations
                 {
                     b.HasBaseType("Diabits.API.Models.HealthDataPoints.HealthDataPoint");
 
-                    b.Property<decimal>("mmolL")
+                    b.Property<double>("mmolL")
                         .HasPrecision(3, 1)
-                        .HasColumnType("decimal(3,1)");
+                        .HasColumnType("float(3)");
 
                     b.ToTable("GlucoseLevels", (string)null);
                 });

@@ -39,6 +39,33 @@ public class HealthDataController(IHealthDataService healthDataService) : Contro
     }
 
     /// <summary>
+    /// Retrieves all health data (numerics, workouts, and manual inputs) for the authenticated user within a specified time period.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetHealthDataForPeriod([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
+            return Unauthorized();
+
+        if (startDate == default || endDate == default)
+            return BadRequest("Invalid date range");
+
+        if (startDate > endDate)
+            return BadRequest("Start date must be before or equal to end date");
+
+        try
+        {
+            var response = await _healthDataService.GetHealthDataForPeriodAsync(userId, startDate, endDate);
+            return Ok(response);
+        }
+        catch (Exception e)
+        {
+            return Problem(statusCode: 500, detail: "An error occurred");
+        }
+    }
+
+    /// <summary>
     /// Endpoint to accept manual input (medication and menstruation entries) in batch.
     /// </summary>
     [HttpPost("manual/batch")]
