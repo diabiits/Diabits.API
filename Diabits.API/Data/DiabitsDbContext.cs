@@ -19,7 +19,7 @@ public class DiabitsDbContext : IdentityDbContext<DiabitsUser>
     {
         base.OnModelCreating(builder);
 
-        // Use Table-per-Concrete-type mapping for the HealthDataPoint inheritance hierarchy
+        // Use Table-per-Concrete-type mapping for HealthDataPoint
         // This stores each concrete derived type in its own table while allowing an abstract parent class for shared properties
         builder.Entity<HealthDataPoint>().UseTpcMappingStrategy();
 

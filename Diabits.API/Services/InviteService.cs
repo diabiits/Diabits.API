@@ -23,15 +23,15 @@ public class InviteService(DiabitsDbContext dbContext) : IInviteService
             )).ToListAsync();
     }
 
-    public async Task<Invite> CreateInviteAsync(CreateInviteRequest request)
+    public async Task<Invite> CreateInviteAsync(string email)
     {
-        var existingInvite = await _dbContext.Invites.FirstOrDefaultAsync(i => i.Email == request.Email);
+        var existingInvite = await _dbContext.Invites.FirstOrDefaultAsync(i => i.Email == email);
         if (existingInvite != null)
             throw new InvalidOperationException("Invite already exists for specified email");
 
         var invite = new Invite
         {
-            Email = request.Email
+            Email = email
         };
 
         _dbContext.Invites.Add(invite);
