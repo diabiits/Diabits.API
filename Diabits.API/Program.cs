@@ -5,8 +5,10 @@ using Diabits.API.Helpers.Mapping;
 using Diabits.API.Interfaces;
 using Diabits.API.Models;
 using Diabits.API.Services;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,7 +36,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddEndpointsApiExplorer(); 
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<NumericMapper>();
@@ -87,16 +89,19 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Apply pending EF Core migrations and seed Identity roles/admin at startup.
-using (var scope = app.Services.CreateScope())
+if (!app.Environment.IsEnvironment("Test"))
 {
-    var services = scope.ServiceProvider;
-    var dbContext = services.GetRequiredService<DiabitsDbContext>();
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var dbContext = services.GetRequiredService<DiabitsDbContext>();
 
-    var pendingMigrations = dbContext.Database.GetPendingMigrations();
-    if (pendingMigrations.Any())
-        await dbContext.Database.MigrateAsync();
+        var pendingMigrations = dbContext.Database.GetPendingMigrations();
+        if (pendingMigrations.Any())
+            await dbContext.Database.MigrateAsync();
 
-    await IdentitySeeder.SeedRolesAndAdminAsync(services);
+        await IdentitySeeder.SeedRolesAndAdminAsync(services);
+    }
 }
 
 app.Run();

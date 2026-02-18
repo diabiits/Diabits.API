@@ -152,13 +152,16 @@ public class AuthService(UserManager<DiabitsUser> userManager, DiabitsDbContext 
     /// <summary>
     /// Validate a refresh token and issue a new access token (keeps the same refresh token).
     /// </summary>
-    public async Task<AuthResponse> RefreshAccessTokenAsync(string refreshToken)
+    public async Task<AuthResponse> RefreshAccessTokenAsync(string userId, string refreshToken)
     {
         var tokenHash = refreshToken.HashToken();
 
         var stored = await _dbContext.RefreshTokens.FirstOrDefaultAsync(r => r.TokenHash == tokenHash) 
             ?? throw new InvalidOperationException("Invalid refresh token");
-       
+
+        if (stored.UserId != userId)
+            throw new InvalidOperationException("Invalid refresh token");
+
         if (stored.ExpiresAt < DateTime.UtcNow)
         {
             _dbContext.RefreshTokens.Remove(stored);

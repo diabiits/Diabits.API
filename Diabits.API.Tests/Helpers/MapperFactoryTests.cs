@@ -31,7 +31,7 @@ public class MapperFactoryTests
 
         var glucoseLevel = Assert.IsType<GlucoseLevel>(entity);
         Assert.Equal(HealthDataType.BLOOD_GLUCOSE, glucoseLevel.Type);
-        Assert.Equal(5.5, glucoseLevel.mmolL);
+        Assert.Equal(5.5m, glucoseLevel.mmolL);
     }
 
     [Fact]
