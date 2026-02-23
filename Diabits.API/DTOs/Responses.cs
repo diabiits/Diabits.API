@@ -20,3 +20,15 @@ public record HealthDataResponse(
 public record LastSyncResponse(DateTime? LastSyncAt);
 
 public record InviteResponse(string Email, string Code, DateTime CreatedAt, DateTime? UsedAt, string? UsedBy);
+
+//// Timeline response reuses existing DTOs but provides bucketed data for glucose/heart rate
+//public record TimelineResponse(
+//    // Bucketed numeric data (time-averaged for charts)
+//    IEnumerable <NumericDto> GlucoseLevels,
+//    IEnumerable <NumericDto> HeartRates,
+//    // Full DTOs with all properties
+//    IEnumerable <NumericDto> SleepSessions,
+//    IEnumerable <WorkoutDto> Workouts,
+//    IEnumerable <ManualInputDto> Medications,
+//    IEnumerable <ManualInputDto> Menstruation
+//);

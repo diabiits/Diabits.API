@@ -14,7 +14,7 @@ public class ManualInputDto : HealthDataPointBaseDto
 
     // When the DTO represents a menstruation entry this string holds the flow category (e.g., "LIGHT")
     [JsonPropertyName("flow")]
-    public FlowEnum Flow { get; set; }
+    public FlowEnum? Flow { get; set; }
 }
 
 public class MedicationValueDto

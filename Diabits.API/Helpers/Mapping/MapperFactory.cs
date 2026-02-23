@@ -32,6 +32,17 @@ public sealed class MapperFactory
         };
     }
 
+    public HealthDataPoint FromDto(HealthDataPointBaseDto dto)
+    {
+        return dto switch
+        {
+            NumericDto numeric => FromDto(numeric),
+            WorkoutDto workout => FromDto(workout),
+            ManualInputDto manualInput => FromDto(manualInput),
+            _ => throw new InvalidOperationException($"Unsupported DTO type: {dto.GetType().Name}")
+        };
+    }
+
     public HealthDataPoint FromDto(WorkoutDto dto) => _workoutMapper.ToWorkout(dto);
 
     public HealthDataPoint FromDto(ManualInputDto dto)

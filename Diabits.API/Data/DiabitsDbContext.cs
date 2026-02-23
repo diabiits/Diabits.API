@@ -24,17 +24,33 @@ public class DiabitsDbContext : IdentityDbContext<DiabitsUser>
         // while allowing an abstract parent class for shared properties
         builder.Entity<HealthDataPoint>().UseTpcMappingStrategy();
 
-        builder.Entity<GlucoseLevel>().ToTable("GlucoseLevels");
-        builder.Entity<HeartRate>().ToTable("HeartRates");
-        builder.Entity<SleepSession>().ToTable("SleepSessions");
-        builder.Entity<Step>().ToTable("Steps");
-        builder.Entity<Workout>().ToTable("Workouts");
-        builder.Entity<Menstruation>().ToTable("Menstruation");
-        builder.Entity<Medication>().ToTable("Medications");
+        builder.Entity<GlucoseLevel>()
+            .ToTable("GlucoseLevels")
+            .HasIndex(g => new { g.UserId, g.StartTime });
 
-        // Index to optimize queries that look up menstruation entries per user and day window
-        //TODO Add for others?
-        builder.Entity<Menstruation>().HasIndex(m => new { m.UserId, m.StartTime } );
+        builder.Entity<HeartRate>()
+            .ToTable("HeartRates")
+            .HasIndex(h => new { h.UserId, h.StartTime});
+
+        builder.Entity<SleepSession>()
+            .ToTable("SleepSessions")
+            .HasIndex(s => new { s.UserId, s.StartTime });
+
+        builder.Entity<Step>()
+            .ToTable("Steps")
+            .HasIndex(s => new { s.UserId, s.StartTime });
+
+        builder.Entity<Workout>()
+            .ToTable("Workouts")
+            .HasIndex(w => new { w.UserId, w.StartTime });
+
+        builder.Entity<Menstruation>()
+            .ToTable("Menstruation")
+            .HasIndex(m => new { m.UserId, m.StartTime });
+
+        builder.Entity<Medication>()
+            .ToTable("Medications")
+            .HasIndex(m => new { m.UserId, m.StartTime });
 
         builder.Entity<GlucoseLevel>().Property(g => g.mmolL).HasPrecision(3, 1);
 

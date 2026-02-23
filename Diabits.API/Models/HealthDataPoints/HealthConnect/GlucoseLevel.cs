@@ -5,5 +5,5 @@
 /// </summary>
 public class GlucoseLevel : HealthDataPoint
 {
-    public decimal mmolL { get; set; }
+    public double mmolL { get; set; }
 }

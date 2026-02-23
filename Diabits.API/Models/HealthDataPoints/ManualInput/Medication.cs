@@ -7,8 +7,8 @@
 public class Medication : HealthDataPoint
 {
     public string Name { get; set; } = string.Empty;
-    public decimal Quantity { get; set; }
-    public decimal StrengthValue { get; set; }
+    public double Quantity { get; set; }
+    public double StrengthValue { get; set; }
     public StrengthUnit StrengthUnit { get; set; }
 
 }
