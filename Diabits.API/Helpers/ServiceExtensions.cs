@@ -1,4 +1,5 @@
 ﻿using Diabits.API.Data;
+using Diabits.API.Data.Mapping;
 using Diabits.API.Helpers.Mapping;
 using Diabits.API.Interfaces;
 using Diabits.API.Models;
