@@ -209,12 +209,12 @@ public class HealthDataService(DiabitsDbContext dbContext, MapperFactory mapperF
             if (!dto.Id.HasValue) continue;
             var id = dto.Id.Value;
 
-            if (dto.Medication is not null && medications.TryGetValue(dto.Id.Value, out var med))
+            if (dto.Medication is not null && medications.TryGetValue(id, out var med))
             {
                 _mapperFactory.UpdateManualInput(dto, med);
                 updateCount++;
             }
-            else if (menstruations.TryGetValue(id, out var mens))
+            else if (dto.Flow is not null && menstruations.TryGetValue(id, out var mens))
             {
                 _mapperFactory.UpdateManualInput(dto, mens);
                 updateCount++;

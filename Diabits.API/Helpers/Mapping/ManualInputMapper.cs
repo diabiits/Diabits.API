@@ -19,6 +19,8 @@ public partial class ManualInputMapper
     [MapperIgnoreTarget(nameof(HealthDataPoint.User))]
     public partial Medication ToMedication(ManualInputDto dto);
 
+    [MapProperty(nameof(ManualInputDto.DateFrom), nameof(HealthDataPoint.StartTime))]
+    [MapProperty(nameof(ManualInputDto.DateTo), nameof(HealthDataPoint.EndTime))]
     [MapProperty(nameof(ManualInputDto.Medication) + "." + nameof(MedicationValueDto.Name), nameof(Medication.Name))]
     [MapProperty(nameof(ManualInputDto.Medication) + "." + nameof(MedicationValueDto.Quantity), nameof(Medication.Quantity))]
     [MapProperty(nameof(ManualInputDto.Medication) + "." + nameof(MedicationValueDto.StrengthValue), nameof(Medication.StrengthValue))]
@@ -37,6 +39,8 @@ public partial class ManualInputMapper
     [MapperIgnoreTarget(nameof(HealthDataPoint.User))]
     public partial Menstruation ToMenstruation(ManualInputDto dto);
 
+    [MapProperty(nameof(ManualInputDto.DateFrom), nameof(HealthDataPoint.StartTime))]
+    [MapProperty(nameof(ManualInputDto.DateTo), nameof(HealthDataPoint.EndTime))]
     [MapProperty(nameof(ManualInputDto.Flow), nameof(Menstruation.Flow))]
     [MapperIgnoreTarget(nameof(HealthDataPoint.Id))]
     [MapperIgnoreTarget(nameof(HealthDataPoint.UserId))]

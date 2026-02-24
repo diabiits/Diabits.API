@@ -1,8 +1,6 @@
 ﻿using System.Security.Claims;
 
-using Diabits.API.DTOs;
 using Diabits.API.Interfaces;
-using Diabits.API.Services;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,25 +12,45 @@ namespace Diabits.API.Controllers;
 [Route("[controller]")]
 public class DashboardController : ControllerBase
 {
-    private readonly IDashboardService _dashboardService;
+    private readonly ITimelineDashboardService _timelineDashboardService;
+    private readonly IGlucoseDashboardService _glucoseDashboardService;
 
-    public DashboardController(IDashboardService dashboardService)
+    public DashboardController(ITimelineDashboardService timelineDashboardService, IGlucoseDashboardService glucoseDashboardService)
     {
-        _dashboardService = dashboardService;
+        _timelineDashboardService = timelineDashboardService;
+        _glucoseDashboardService = glucoseDashboardService;
     }
-    //TODO Remove bucketMinutes
+
     [HttpGet("timeline")]
-    public async Task<IActionResult> GetTimeline([FromQuery] DateTime date, [FromQuery] int bucketMinutes = 10)
+    public async Task<IActionResult> GetTimeline([FromQuery] DateTime date)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userId is null) return Unauthorized();
 
         if (date == default) return BadRequest("date is required");
-        if (bucketMinutes <= 0 || bucketMinutes > 60) return BadRequest("bucketMinutes must be 1-60");
 
         try
         {
-            var response = await _dashboardService.GetTimelineAsync(userId, date, bucketMinutes);
+            var response = await _timelineDashboardService.GetTimelineAsync(userId, date);
+            return Ok(response);
+        }
+        catch (Exception e)
+        {
+            return Problem(statusCode: 500, detail: "An error occurred");
+        }
+    }
+
+    [HttpGet("glucose/daily")]
+    public async Task<IActionResult> GetDailyGlucose([FromQuery] DateOnly date)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId is null) return Unauthorized();
+
+        if (date == default) return BadRequest("date is required");
+
+        try
+        {
+            var response = await _glucoseDashboardService.GetDailyGlucoseAsync(userId, date);
             return Ok(response);
         }
         catch (Exception e)
