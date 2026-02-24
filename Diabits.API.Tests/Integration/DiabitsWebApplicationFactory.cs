@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Configuration;
 
 public class DiabitsWebApplicationFactory : WebApplicationFactory<Program>
 {
@@ -19,6 +20,17 @@ public class DiabitsWebApplicationFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Test");
+
+        builder.ConfigureAppConfiguration((context, config) =>
+        {
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Key"] = "test_supersecretkey_that_should_be_long_and_secure_for_integration_tests",
+                ["Jwt:Issuer"] = "DiabitsAPI",
+                ["Jwt:Audience"] = "DiabitsFrontend",
+                ["Jwt:ExpiresInMinutes"] = "120"
+            });
+        });
 
         builder.ConfigureServices(services =>
         {
