@@ -109,6 +109,9 @@ public class AuthController(IAuthService authService) : ControllerBase
     [HttpPost("refreshToken")]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
+        //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //if (userId == null) return Unauthorized();
+
         try
         {
             var authResponse = await _authService.RefreshAccessTokenAsync(request.RefreshToken);

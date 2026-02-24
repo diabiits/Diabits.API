@@ -4,6 +4,7 @@ using Diabits.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Diabits.API.Migrations
 {
     [DbContext(typeof(DiabitsDbContext))]
-    partial class DiabitsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260216000339_ChangeGlucoseValueType")]
+    partial class ChangeGlucoseValueType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -328,11 +331,9 @@ namespace Diabits.API.Migrations
                 {
                     b.HasBaseType("Diabits.API.Models.HealthDataPoints.HealthDataPoint");
 
-                    b.Property<double>("mmolL")
+                    b.Property<decimal>("mmolL")
                         .HasPrecision(3, 1)
-                        .HasColumnType("float(3)");
-
-                    b.HasIndex("UserId", "StartTime");
+                        .HasColumnType("decimal(3,1)");
 
                     b.ToTable("GlucoseLevels", (string)null);
                 });
@@ -344,8 +345,6 @@ namespace Diabits.API.Migrations
                     b.Property<int>("BPM")
                         .HasColumnType("int");
 
-                    b.HasIndex("UserId", "StartTime");
-
                     b.ToTable("HeartRates", (string)null);
                 });
 
@@ -356,8 +355,6 @@ namespace Diabits.API.Migrations
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("int");
 
-                    b.HasIndex("UserId", "StartTime");
-
                     b.ToTable("SleepSessions", (string)null);
                 });
 
@@ -367,8 +364,6 @@ namespace Diabits.API.Migrations
 
                     b.Property<int>("Count")
                         .HasColumnType("int");
-
-                    b.HasIndex("UserId", "StartTime");
 
                     b.ToTable("Steps", (string)null);
                 });
@@ -384,8 +379,6 @@ namespace Diabits.API.Migrations
                     b.Property<int>("CaloriesBurned")
                         .HasColumnType("int");
 
-                    b.HasIndex("UserId", "StartTime");
-
                     b.ToTable("Workouts", (string)null);
                 });
 
@@ -397,16 +390,14 @@ namespace Diabits.API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double>("Quantity")
-                        .HasColumnType("float");
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("StrengthUnit")
                         .HasColumnType("int");
 
-                    b.Property<double>("StrengthValue")
-                        .HasColumnType("float");
-
-                    b.HasIndex("UserId", "StartTime");
+                    b.Property<decimal>("StrengthValue")
+                        .HasColumnType("decimal(18,2)");
 
                     b.ToTable("Medications", (string)null);
                 });

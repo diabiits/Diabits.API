@@ -19,6 +19,8 @@ public partial class ManualInputMapper
     [MapperIgnoreTarget(nameof(HealthDataPoint.User))]
     public partial Medication ToMedication(ManualInputDto dto);
 
+    [MapProperty(nameof(ManualInputDto.DateFrom), nameof(HealthDataPoint.StartTime))]
+    [MapProperty(nameof(ManualInputDto.DateTo), nameof(HealthDataPoint.EndTime))]
     [MapProperty(nameof(ManualInputDto.Medication) + "." + nameof(MedicationValueDto.Name), nameof(Medication.Name))]
     [MapProperty(nameof(ManualInputDto.Medication) + "." + nameof(MedicationValueDto.Quantity), nameof(Medication.Quantity))]
     [MapProperty(nameof(ManualInputDto.Medication) + "." + nameof(MedicationValueDto.StrengthValue), nameof(Medication.StrengthValue))]
@@ -37,6 +39,8 @@ public partial class ManualInputMapper
     [MapperIgnoreTarget(nameof(HealthDataPoint.User))]
     public partial Menstruation ToMenstruation(ManualInputDto dto);
 
+    [MapProperty(nameof(ManualInputDto.DateFrom), nameof(HealthDataPoint.StartTime))]
+    [MapProperty(nameof(ManualInputDto.DateTo), nameof(HealthDataPoint.EndTime))]
     [MapProperty(nameof(ManualInputDto.Flow), nameof(Menstruation.Flow))]
     [MapperIgnoreTarget(nameof(HealthDataPoint.Id))]
     [MapperIgnoreTarget(nameof(HealthDataPoint.UserId))]
@@ -44,7 +48,26 @@ public partial class ManualInputMapper
     [MapperIgnoreTarget(nameof(HealthDataPoint.Type))]
     public partial void UpdateMenstruation(ManualInputDto source, Menstruation target);
 
+    [MapProperty(nameof(HealthDataPoint.StartTime), nameof(ManualInputDto.DateFrom))]
+    [MapProperty(nameof(HealthDataPoint.EndTime), nameof(ManualInputDto.DateTo))]
+    [MapProperty(nameof(HealthDataPoint.Type), nameof(ManualInputDto.HealthDataType))]
+    [MapProperty(nameof(Medication.Name), nameof(ManualInputDto.Medication) + "." + nameof(MedicationValueDto.Name))]
+    [MapProperty(nameof(Medication.Quantity), nameof(ManualInputDto.Medication) + "." + nameof(MedicationValueDto.Quantity))]
+    [MapProperty(nameof(Medication.StrengthValue), nameof(ManualInputDto.Medication) + "." + nameof(MedicationValueDto.StrengthValue))]
+    [MapProperty(nameof(Medication.StrengthUnit), nameof(ManualInputDto.Medication) + "." + nameof(MedicationValueDto.StrengthUnit))]
+    public partial ManualInputDto ToDto(Medication entity);
+
+    [MapProperty(nameof(HealthDataPoint.StartTime), nameof(ManualInputDto.DateFrom))]
+    [MapProperty(nameof(HealthDataPoint.EndTime), nameof(ManualInputDto.DateTo))]
+    [MapProperty(nameof(HealthDataPoint.Type), nameof(ManualInputDto.HealthDataType))]
+    [MapProperty(nameof(Menstruation.Flow), nameof(ManualInputDto.Flow))]
+    public partial ManualInputDto ToDto(Menstruation entity);
+
     private StrengthUnit Map(string unit) => Enum.Parse<StrengthUnit>(unit, true);
 
     private FlowEnum MapFlow(string flow) => Enum.Parse<FlowEnum>(flow, true);
+
+    private string MapStrengthUnitToString(StrengthUnit unit) => unit.ToString();
+
+    private string MapFlowToString(FlowEnum flow) => flow.ToString();
 }

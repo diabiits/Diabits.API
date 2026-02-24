@@ -4,6 +4,7 @@ using Diabits.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Diabits.API.Migrations
 {
     [DbContext(typeof(DiabitsDbContext))]
-    partial class DiabitsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260223121823_AddIndexes")]
+    partial class AddIndexes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -397,14 +400,14 @@ namespace Diabits.API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double>("Quantity")
-                        .HasColumnType("float");
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("StrengthUnit")
                         .HasColumnType("int");
 
-                    b.Property<double>("StrengthValue")
-                        .HasColumnType("float");
+                    b.Property<decimal>("StrengthValue")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasIndex("UserId", "StartTime");
 

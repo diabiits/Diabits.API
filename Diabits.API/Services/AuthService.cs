@@ -158,15 +158,15 @@ public class AuthService(UserManager<DiabitsUser> userManager, DiabitsDbContext 
 
         var stored = await _dbContext.RefreshTokens.FirstOrDefaultAsync(r => r.TokenHash == tokenHash) 
             ?? throw new InvalidOperationException("Invalid refresh token");
-       
+
+        var user = await _userManager.FindByIdAsync(stored.UserId)
+                ?? throw new InvalidOperationException("User not found");
+
         if (stored.ExpiresAt < DateTime.UtcNow)
         {
             _dbContext.RefreshTokens.Remove(stored);
             throw new InvalidOperationException("Invalid refresh token");
         }
-
-        var user = await _userManager.FindByIdAsync(stored.UserId)
-            ?? throw new InvalidOperationException("User not found");
 
         // Issue a new access token
         var accessToken = await GenerateAccessTokenAsync(user);

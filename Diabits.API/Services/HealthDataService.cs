@@ -5,6 +5,7 @@ using Diabits.API.Helpers;
 using Diabits.API.Helpers.Mapping;
 using Diabits.API.Interfaces;
 using Diabits.API.Models.HealthDataPoints;
+using Diabits.API.Models.HealthDataPoints.HealthConnect;
 using Diabits.API.Models.HealthDataPoints.ManualInput;
 using Humanizer;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +23,7 @@ public class HealthDataService(DiabitsDbContext dbContext, MapperFactory mapperF
     public async Task<ManualInputResponse> GetManualInputForDayAsync(string userId, DateTime date)
     {
         var startOfDay = date.AtMidnight();
-        var endOfDay = startOfDay.AddDays(1).AddMicroseconds(-1); // Inclusive end of day
+        var endOfDay = startOfDay.AddDays(1); // Inclusive end of day
 
 
         var meds = await _dbContext
@@ -44,6 +45,62 @@ public class HealthDataService(DiabitsDbContext dbContext, MapperFactory mapperF
     }
 
     /// <summary>
+    /// Returns all health data separated by concrete type for a user within a specified time period.
+    /// Queries each type separately for better performance with large datasets.
+    /// </summary>
+    public async Task<HealthDataResponse> GetHealthDataForPeriodAsync(string userId, DateTime startDate, DateTime endDate)
+    {
+        var start = startDate.AtMidnight();
+        var end = endDate.AtMidnight().AddDays(1);
+
+        // Query each type separately to avoid loading everything into memory at once
+        var glucoseLevels = await _dbContext.Set<GlucoseLevel>()
+            .AsNoTracking()
+            .Where(dp => dp.UserId == userId && dp.StartTime >= start && dp.StartTime <= end)
+            .ToListAsync();
+
+        var heartRates = await _dbContext.Set<HeartRate>()
+            .AsNoTracking()
+            .Where(dp => dp.UserId == userId && dp.StartTime >= start && dp.StartTime <= end)
+            .ToListAsync();
+
+        var steps = await _dbContext.Set<Step>()
+            .AsNoTracking()
+            .Where(dp => dp.UserId == userId && dp.StartTime >= start && dp.StartTime <= end)
+            .ToListAsync();
+
+        var sleepSessions = await _dbContext.Set<SleepSession>()
+            .AsNoTracking()
+            .Where(dp => dp.UserId == userId && dp.StartTime >= start && dp.StartTime <= end)
+            .ToListAsync();
+
+        var workouts = await _dbContext.Set<Workout>()
+            .AsNoTracking()
+            .Where(dp => dp.UserId == userId && dp.StartTime >= start && dp.StartTime <= end)
+            .ToListAsync();
+
+        var medications = await _dbContext.Set<Medication>()
+            .AsNoTracking()
+            .Where(dp => dp.UserId == userId && dp.StartTime >= start && dp.StartTime <= end)
+            .ToListAsync();
+
+        var menstruations = await _dbContext.Set<Menstruation>()
+            .AsNoTracking()
+            .Where(dp => dp.UserId == userId && dp.StartTime >= start && dp.StartTime <= end)
+            .ToListAsync();
+
+        return new HealthDataResponse(
+            GlucoseLevels: [.. glucoseLevels.Select(e => (NumericDto)_mapperFactory.ToDto(e))],
+            HeartRates: [.. heartRates.Select(e => (NumericDto)_mapperFactory.ToDto(e))],
+            Steps: [.. steps.Select(e => (NumericDto)_mapperFactory.ToDto(e))],
+            SleepSessions: [.. sleepSessions.Select(e => (NumericDto)_mapperFactory.ToDto(e))],
+            Workouts: [.. workouts.Select(e => (WorkoutDto)_mapperFactory.ToDto(e))],
+            Medications: [.. medications.Select(e => (ManualInputDto)_mapperFactory.ToDto(e))],
+            Menstruation: [.. menstruations.Select(e => (ManualInputDto)_mapperFactory.ToDto(e))]
+        );
+    }
+
+    /// <summary>
     ///  Convert incoming DTOs (workouts + numerics) into mapped entity instances and persist them.
     ///  The mobile client already performs some deduplication; server still performs a safety dedupe.
     /// </summary>
@@ -52,7 +109,7 @@ public class HealthDataService(DiabitsDbContext dbContext, MapperFactory mapperF
         // Ensure user exists and get a reference for updating last sync.
         var user = await _dbContext.Users.SingleAsync(u => u.Id == userId);
 
-        var dataPoints = new List<HealthDataPoint>();   
+        var dataPoints = new List<HealthDataPoint>();
 
         foreach (var w in request.Workouts)
         {
@@ -103,7 +160,7 @@ public class HealthDataService(DiabitsDbContext dbContext, MapperFactory mapperF
             .Where(dp => dp.UserId == userId && dp.StartTime >= start)
             .ToListAsync();
 
-        var deduplicationStrategy = new DeduplicationStrategy(existingPoints);      
+        var deduplicationStrategy = new DeduplicationStrategy(existingPoints);
 
         var toAdd = points
             .Where(p => !deduplicationStrategy.IsDuplicate(p))
@@ -152,12 +209,12 @@ public class HealthDataService(DiabitsDbContext dbContext, MapperFactory mapperF
             if (!dto.Id.HasValue) continue;
             var id = dto.Id.Value;
 
-            if (dto.Medication is not null && medications.TryGetValue(dto.Id.Value, out var med))
+            if (dto.Medication is not null && medications.TryGetValue(id, out var med))
             {
                 _mapperFactory.UpdateManualInput(dto, med);
                 updateCount++;
             }
-            else if (menstruations.TryGetValue(id, out var mens))
+            else if (dto.Flow is not null && menstruations.TryGetValue(id, out var mens))
             {
                 _mapperFactory.UpdateManualInput(dto, mens);
                 updateCount++;

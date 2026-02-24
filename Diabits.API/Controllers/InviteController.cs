@@ -34,7 +34,7 @@ public class InviteController(IInviteService inviteService) : ControllerBase
     {
         try
         {
-            var invite = await _inviteService.CreateInviteAsync(request);
+            var invite = await _inviteService.CreateInviteAsync(request.Email);
             return Created(string.Empty, invite);
         }
         catch (InvalidOperationException ex)
