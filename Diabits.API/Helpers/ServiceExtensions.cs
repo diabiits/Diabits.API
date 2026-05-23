@@ -91,13 +91,24 @@ public static class ServiceExtensions
         {
             options.AddPolicy("BlazorWasm", policy =>
             {
-                //TODO Refactor
-                var allowedOrigins = config.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? throw new InvalidOperationException("No Allowed Origins Specified");
+                //TODO Refactor - make secure
+                var allowedOrigins = config.GetSection("Cors:AllowedOrigins").Get<string[]>();
 
-                policy
+                if (allowedOrigins is { Length: > 0 })
+                {
+                    policy
+                    .AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+                }
+                else
+                {
+                    policy
                     .WithOrigins(allowedOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod();
+                }
+
             });
         });
 
@@ -109,7 +120,7 @@ public static class ServiceExtensions
     /// </summary>
     public static IServiceCollection AddDiabitsDataAccess(this IServiceCollection services, IConfiguration config)
     {
-        services.AddDbContext<DiabitsDbContext>(options => 
+        services.AddDbContext<DiabitsDbContext>(options =>
             options.UseSqlServer(config.GetConnectionString("DefaultConnection")));
 
         services

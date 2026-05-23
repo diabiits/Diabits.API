@@ -6,7 +6,6 @@ on:
 
 jobs:
   test:
-    environment: Testing
     runs-on: ubuntu-latest
 
     steps:
