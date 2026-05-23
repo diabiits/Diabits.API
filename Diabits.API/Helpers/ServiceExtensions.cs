@@ -92,8 +92,7 @@ public static class ServiceExtensions
             options.AddPolicy("BlazorWasm", policy =>
             {
                 //TODO Refactor
-                var allowedOrigins = config.GetSection("Cors:AllowedOrigins").Get<string[]>() 
-                    ?? ["https://localhost:7214"];
+                var allowedOrigins = config.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? throw new InvalidOperationException("No Allowed Origins Specified");
 
                 policy
                     .WithOrigins(allowedOrigins)
