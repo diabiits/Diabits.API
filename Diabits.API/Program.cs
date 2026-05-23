@@ -17,7 +17,23 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerWithAuth();
 
 // Configure cross-origin requests for Blazor client
-builder.Services.AddDiabitsCors(builder.Configuration);
+if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("CorsTestEnv", policy =>
+        {
+            policy
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+    });
+}
+else 
+{
+    builder.Services.AddDiabitsCors(builder.Configuration);
+}
 
 // Configure data access and identity
 builder.Services.AddDiabitsDataAccess(builder.Configuration);
