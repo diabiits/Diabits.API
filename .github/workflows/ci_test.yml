@@ -25,4 +25,6 @@ jobs:
         run: dotnet build --no-restore -c Release
 
       - name: Test
+        env:
+          ASPNETCORE_ENVIRONMENT: Testing
         run: dotnet test --no-build -c Release --verbosity normal
