@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Diabits.API.Configuration;
+namespace Diabits.API.Helpers;
 
 public static class StringExtensions
 {

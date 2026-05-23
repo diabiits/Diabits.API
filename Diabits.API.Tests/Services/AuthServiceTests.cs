@@ -2,9 +2,9 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-using Diabits.API.Configuration;
 using Diabits.API.Data;
 using Diabits.API.DTOs;
+using Diabits.API.Helpers;
 using Diabits.API.Models;
 using Diabits.API.Services;
 

@@ -2,11 +2,13 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Diabits.API.Configuration;
+
 using Diabits.API.Data;
 using Diabits.API.DTOs;
+using Diabits.API.Helpers;
 using Diabits.API.Interfaces;
 using Diabits.API.Models;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;

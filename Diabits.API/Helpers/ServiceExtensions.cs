@@ -4,14 +4,16 @@ using Diabits.API.Helpers.Mapping;
 using Diabits.API.Interfaces;
 using Diabits.API.Models;
 using Diabits.API.Services;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+
 using System.Text;
 
-namespace Diabits.API.Configuration;
+namespace Diabits.API.Helpers;
 
 /// <summary>
 /// Centralized extension methods to register common services used by the Diabits API.
@@ -89,13 +91,24 @@ public static class ServiceExtensions
         {
             options.AddPolicy("BlazorWasm", policy =>
             {
-                var allowedOrigins = config.GetSection("Cors:AllowedOrigins").Get<string[]>() 
-                    ?? ["https://localhost:7214"];
+                //TODO Refactor - make secure
+                var allowedOrigins = config.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
-                policy
+                if (allowedOrigins is { Length: > 0 })
+                {
+                    policy
+                    .AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+                }
+                else
+                {
+                    policy
                     .WithOrigins(allowedOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod();
+                }
+
             });
         });
 
@@ -107,8 +120,8 @@ public static class ServiceExtensions
     /// </summary>
     public static IServiceCollection AddDiabitsDataAccess(this IServiceCollection services, IConfiguration config)
     {
-        services.AddDbContext<DiabitsDbContext>(options => 
-            options.UseSqlServer(config.GetConnectionString("DiabitsDb")));
+        services.AddDbContext<DiabitsDbContext>(options =>
+            options.UseSqlServer(config.GetConnectionString("DefaultConnection")));
 
         services
             .AddIdentity<DiabitsUser, IdentityRole>()
