@@ -84,7 +84,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         try
         {
             var accessToken = await _authService.UpdateCredentialsAsync(userId, request);
-            //TODO Refactor
+            //TODO TESTING WITH STATIC REFRESH TOKEN, REMOVE LATER
             return Ok(new AuthResponse(accessToken, "TESTING"));
         }
         catch (InvalidOperationException e)
