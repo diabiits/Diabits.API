@@ -140,6 +140,7 @@ public static class ServiceExtensions
         services.AddSingleton<NumericMapper>();
         services.AddSingleton<WorkoutMapper>();
         services.AddSingleton<ManualInputMapper>();
+        services.AddSingleton<ImportMapper>();
         services.AddSingleton<MapperFactory>();
 
         // Application services (scoped to request lifetime)

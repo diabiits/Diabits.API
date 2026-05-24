@@ -1,4 +1,11 @@
-﻿using Diabits.API.Data;
+﻿using System.Globalization;
+
+using ClosedXML.Excel;
+
+using CsvHelper;
+using CsvHelper.Configuration;
+
+using Diabits.API.Data;
 using Diabits.API.DTOs;
 using Diabits.API.DTOs.HealthDataPoints;
 using Diabits.API.Helpers;
@@ -7,7 +14,9 @@ using Diabits.API.Interfaces;
 using Diabits.API.Models.HealthDataPoints;
 using Diabits.API.Models.HealthDataPoints.HealthConnect;
 using Diabits.API.Models.HealthDataPoints.ManualInput;
+
 using Humanizer;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Diabits.API.Services;
@@ -144,6 +153,47 @@ public class HealthDataService(DiabitsDbContext dbContext, MapperFactory mapperF
 
         await AddDataPointsAsync(dataPoints, user.Id);
     }
+
+    /// <summary>
+    ///  Convert and transform incoming glooko stream to DTOs and map into entity instances and persist.
+    /// </summary>
+    public async Task AddDataPointsAsync(Stream stream, string userId)
+    {
+        using var reader = new StreamReader(stream);
+
+        // Skip metadata line
+        await reader.ReadLineAsync();
+
+        //TODO Figure out globalization 
+        var config = new CsvConfiguration(new CultureInfo("da-DK"))
+        {
+            HasHeaderRecord = true,
+            Delimiter = ","
+        };
+
+        using var csv = new CsvReader(reader, config);
+
+        csv.Context.RegisterClassMap<CsvImportMap>();
+
+        var importDtos = csv
+            .GetRecords<ImportDto>()
+            .Where(r => (r.CarbGrams ?? 0) > 0 || r.Units > 0)
+            .OrderBy(r => r.DateFrom)
+            .ToList();
+
+        var dataPoints = new List<HealthDataPoint>();
+
+        foreach (var dto in importDtos)
+        {
+            dto.HealthDataType = HealthDataType.INSULIN_BOLUS;
+
+            var dataPoint = _mapperFactory.FromDto(dto);
+            dataPoints.Add(dataPoint);
+        }
+
+        await AddDataPointsAsync(dataPoints, userId);
+    }
+
 
     /// <summary>
     /// Mapped datapoints to DB (with deduplication against existing data)

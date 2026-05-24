@@ -11,13 +11,26 @@ public sealed class MapperFactory
     private readonly NumericMapper _numericMapper;
     private readonly WorkoutMapper _workoutMapper;
     private readonly ManualInputMapper _manualInputMapper;
+    private readonly ImportMapper _importMapper;
 
-
-    public MapperFactory(NumericMapper numericMapper, WorkoutMapper workoutMapper, ManualInputMapper manualInputMapper)
+    public MapperFactory(NumericMapper numericMapper, WorkoutMapper workoutMapper, ManualInputMapper manualInputMapper, ImportMapper importMapper)
     {
         _numericMapper = numericMapper;
         _workoutMapper = workoutMapper;
         _manualInputMapper = manualInputMapper;
+        _importMapper = importMapper;
+    }
+
+    public HealthDataPoint FromDto(HealthDataPointBaseDto dto)
+    {
+        return dto switch
+        {
+            NumericDto numeric => FromDto(numeric),
+            WorkoutDto workout => FromDto(workout),
+            ManualInputDto manualInput => FromDto(manualInput),
+            ImportDto import => FromDto(import),
+            _ => throw new InvalidOperationException($"Unsupported DTO type: {dto.GetType().Name}")
+        };
     }
 
     public HealthDataPoint FromDto(NumericDto dto)
@@ -30,18 +43,7 @@ public sealed class MapperFactory
             HealthDataType.SLEEP_SESSION => _numericMapper.ToSleepSession(dto),
             _ => throw new InvalidOperationException($"Unsupported numeric type: {dto.HealthDataType}")
         };
-    }
-
-    public HealthDataPoint FromDto(HealthDataPointBaseDto dto)
-    {
-        return dto switch
-        {
-            NumericDto numeric => FromDto(numeric),
-            WorkoutDto workout => FromDto(workout),
-            ManualInputDto manualInput => FromDto(manualInput),
-            _ => throw new InvalidOperationException($"Unsupported DTO type: {dto.GetType().Name}")
-        };
-    }
+    }    
 
     public HealthDataPoint FromDto(WorkoutDto dto) => _workoutMapper.ToWorkout(dto);
 
@@ -54,6 +56,8 @@ public sealed class MapperFactory
             _ => throw new InvalidOperationException($"Unsupported numeric type: {dto.HealthDataType}")
         };
     }
+
+    public HealthDataPoint FromDto(ImportDto dto) => _importMapper.ToInsulinBolus(dto);
 
     public void UpdateManualInput(ManualInputDto dto, Medication target)
         => _manualInputMapper.UpdateMedication(dto, target);
