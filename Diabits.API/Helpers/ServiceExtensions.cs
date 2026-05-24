@@ -94,7 +94,7 @@ public static class ServiceExtensions
                 //TODO Refactor - make secure
                 var allowedOrigins = config.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
-                if (allowedOrigins is { Length: > 0 })
+                if (allowedOrigins.Length >= 0)
                 {
                     policy
                     .AllowAnyOrigin()
