@@ -30,7 +30,7 @@ public class DiabitsDbContext : IdentityDbContext<DiabitsUser>
 
         builder.Entity<HeartRate>()
             .ToTable("HeartRates")
-            .HasIndex(h => new { h.UserId, h.StartTime});
+            .HasIndex(h => new { h.UserId, h.StartTime });
 
         builder.Entity<SleepSession>()
             .ToTable("SleepSessions")
@@ -52,7 +52,15 @@ public class DiabitsDbContext : IdentityDbContext<DiabitsUser>
             .ToTable("Medications")
             .HasIndex(m => new { m.UserId, m.StartTime });
 
+        builder.Entity<InsulinBolus>()
+            .ToTable("InsulinBoluses")
+            .HasIndex(i => new { i.UserId, i.StartTime });
+
         builder.Entity<GlucoseLevel>().Property(g => g.mmolL).HasPrecision(3, 1);
+
+        builder.Entity<InsulinBolus>().Property(i => i.Units).HasPrecision(4, 2);
+        builder.Entity<InsulinBolus>().Property(i => i.GlucoseLevel).HasPrecision(3, 1);
+        builder.Entity<InsulinBolus>().Property(i => i.CarbGrams).HasPrecision(5, 1);
 
         builder.Entity<Invite>()
             .Property(i => i.UsedAt)

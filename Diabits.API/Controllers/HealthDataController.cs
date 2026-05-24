@@ -152,4 +152,27 @@ public class HealthDataController(IHealthDataService healthDataService) : Contro
             return Problem(statusCode: 500, detail: "An error occurred");
         }
     }
+
+    [HttpPost("imports/glooko")]
+    public async Task<IActionResult> PostGlookoData([FromForm] IFormFile file)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
+            return Unauthorized();
+
+        //TODO Add file type and size validation. For now, just check if a file was uploaded.
+        if (file.Length == 0)
+            return BadRequest("File is empty");
+
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            await _healthDataService.AddDataPointsAsync(stream, userId);
+            return Ok("Import successful");
+        }
+        catch (Exception e)
+        {
+            return Problem(statusCode: 500, detail: "An error occurred during import");
+        }
+    }
 }

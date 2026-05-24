@@ -9,6 +9,7 @@ public interface IHealthDataService
     Task<HealthDataResponse> GetHealthDataForPeriodAsync(string userId, DateTime startDate, DateTime endDate);
     Task AddDataPointsAsync(HealthConnectRequest request, string userId);
     Task AddDataPointsAsync(ManualInputRequest request, string userId);
+    Task AddDataPointsAsync(Stream stream, string userId);
     Task<int> BatchUpdateManualInputAsync(string userId, IEnumerable<ManualInputDto> inputDtos);
     Task<int> BatchDeleteManualInputAsync(string userId, IEnumerable<int> ids);
 }

@@ -25,5 +25,6 @@ public enum HealthDataType
     SLEEP_SESSION,
     WORKOUT,
     MENSTRUATION,
-    MEDICATION
+    MEDICATION,
+    INSULIN_BOLUS
 }
