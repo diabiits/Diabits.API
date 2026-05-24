@@ -14,7 +14,8 @@ public record HealthDataResponse(
     IEnumerable<NumericDto> SleepSessions,
     IEnumerable<WorkoutDto> Workouts,
     IEnumerable<ManualInputDto> Medications,
-    IEnumerable<ManualInputDto> Menstruation
+    IEnumerable<ManualInputDto> Menstruation,
+    IEnumerable<ImportDto> InsulinBoluses
 );
 
 public record LastSyncResponse(DateTime? LastSyncAt);

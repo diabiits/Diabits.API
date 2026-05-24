@@ -98,6 +98,11 @@ public class HealthDataService(DiabitsDbContext dbContext, MapperFactory mapperF
             .Where(dp => dp.UserId == userId && dp.StartTime >= start && dp.StartTime <= end)
             .ToListAsync();
 
+        var insulinBoluses = await _dbContext.Set<InsulinBolus>()
+            .AsNoTracking()
+            .Where(dp => dp.UserId == userId && dp.StartTime >= start && dp.StartTime <= end)
+            .ToListAsync();
+
         return new HealthDataResponse(
             GlucoseLevels: [.. glucoseLevels.Select(e => (NumericDto)_mapperFactory.ToDto(e))],
             HeartRates: [.. heartRates.Select(e => (NumericDto)_mapperFactory.ToDto(e))],
@@ -105,7 +110,8 @@ public class HealthDataService(DiabitsDbContext dbContext, MapperFactory mapperF
             SleepSessions: [.. sleepSessions.Select(e => (NumericDto)_mapperFactory.ToDto(e))],
             Workouts: [.. workouts.Select(e => (WorkoutDto)_mapperFactory.ToDto(e))],
             Medications: [.. medications.Select(e => (ManualInputDto)_mapperFactory.ToDto(e))],
-            Menstruation: [.. menstruations.Select(e => (ManualInputDto)_mapperFactory.ToDto(e))]
+            Menstruation: [.. menstruations.Select(e => (ManualInputDto)_mapperFactory.ToDto(e))],
+            InsulinBoluses: [.. insulinBoluses.Select(e => (ImportDto)_mapperFactory.ToDto(e))]
         );
     }
 

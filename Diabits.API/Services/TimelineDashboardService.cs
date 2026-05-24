@@ -62,6 +62,11 @@ public class TimelineDashboardService : ITimelineDashboardService
             .Select(x => (FlowEnum?)x.Flow)
             .FirstOrDefaultAsync();
 
+        //TODO Add carb and glucose level details on label
+        var insulinBoluses = await QueryDay<InsulinBolus>(userId, dayStart, dayEnd)
+            .Select(x => new NumericPoint(x.StartTime, x.Units))
+            .ToListAsync();
+
         var series = new List<TimelineSeries>
         {
             new(
@@ -93,6 +98,11 @@ public class TimelineDashboardService : ITimelineDashboardService
                 Name: "Medication",
                 Type: TimelineSeriesType.Scatter,
                 Points: BucketMarkers(meds, dayStart)
+            ),
+            new(
+                Name: "Insulin Bolus",
+                Type: TimelineSeriesType.Bar,
+                Points: BucketNumericSum(insulinBoluses, dayStart, "U")
             ),
         };
 
@@ -203,6 +213,33 @@ public class TimelineDashboardService : ITimelineDashboardService
         return buckets;
     }
 
+    //TODO Revist this with a fresher mind. Can it be generalized or should it be more obvious that it's its own thing?
+    private static List<TimelinePoint> BucketNumericSum(IEnumerable<NumericPoint> points, DateTime dayStart, string unit, int decimals = 1)
+    {
+        var buckets = CreateBuckets(dayStart);
+
+        var byBucket = points
+            .GroupBy(p => BucketIndex(p.Time, dayStart))
+            .Where(g => g.Key >= 0 && g.Key < BucketsPerDay)
+            .ToDictionary(
+                g => g.Key,
+                g => Math.Round(g.Sum(x => x.Value), decimals)
+            );
+
+        var fmt = $"F{decimals}";
+
+        foreach (var (idx, value) in byBucket)
+        {
+            buckets[idx] = buckets[idx] with
+            {
+                Value = value,
+                Name = $"{value.ToString(fmt)} {unit}"
+            };
+        }
+
+        return buckets;
+    }
+
     private IQueryable<T> QueryDay<T>(string userId, DateTime dayStart, DateTime dayEnd) where T : HealthDataPoint
         => _dbContext.Set<T>().AsNoTracking().Where(x => x.UserId == userId && x.StartTime >= dayStart && x.StartTime < dayEnd);
 
@@ -246,6 +283,20 @@ public class TimelineDashboardService : ITimelineDashboardService
 
     private static string FormatMedicationLabel(string name, double quantity, double strengthValue, StrengthUnit strengthUnit) => $"{name} {strengthValue * quantity}{strengthUnit.ToString().ToLowerInvariant()}";
 
+    //TODO Add glucose level in label?
+    private static string FormatInsulinBolusLabel(InsulinBolus x)
+    {
+        var parts = new List<string>
+    {
+        $"{x.Units:F1}U insulin"
+    };
+
+        if (x.CarbGrams is not null)
+            parts.Add($"{x.CarbGrams:F0}g carbs");
+
+        return string.Join(" · ", parts);
+    }
+
     private readonly record struct NumericPoint(DateTime Time, double Value);
     private readonly record struct Marker(DateTime Time, string Label);
     private readonly record struct Interval(DateTime Start, DateTime End, string Label);
@@ -261,5 +312,6 @@ public enum TimelineSeriesType
 {
     Line,
     Area,
-    Scatter
+    Scatter,
+    Bar
 }

@@ -76,6 +76,7 @@ public sealed class MapperFactory
             Workout workout => _workoutMapper.ToDto(workout),
             Medication medication => _manualInputMapper.ToDto(medication),
             Menstruation menstruation => _manualInputMapper.ToDto(menstruation),
+            InsulinBolus insulinBolus => _importMapper.ToDto(insulinBolus),
             _ => throw new InvalidOperationException($"Unsupported entity type: {entity.GetType().Name}")
         };
     }

@@ -7,12 +7,14 @@ using Diabits.API.Models.HealthDataPoints.ManualInput;
 
 namespace Diabits.API.Tests.Helpers;
 
+//TODO Implement ImportMapper tests
 public class MapperFactoryTests
 {
     private readonly MapperFactory _mapperFactory = new(
         new NumericMapper(),
         new WorkoutMapper(),
-        new ManualInputMapper()
+        new ManualInputMapper(),
+        new ImportMapper()
     );
 
     private readonly DateTime _date = new(2026, 12, 31);

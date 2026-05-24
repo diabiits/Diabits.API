@@ -18,4 +18,9 @@ public partial class ImportMapper
     [MapperIgnoreTarget(nameof(HealthDataPoint.UserId))]
     [MapperIgnoreTarget(nameof(HealthDataPoint.User))]
     public partial InsulinBolus ToInsulinBolus(ImportDto dto);
+
+    [MapProperty(nameof(InsulinBolus.StartTime), nameof(ImportDto.DateFrom))]
+    [MapProperty(nameof(InsulinBolus.EndTime), nameof(ImportDto.DateTo))]
+    [MapProperty(nameof(InsulinBolus.Type), nameof(ImportDto.HealthDataType))]
+    public partial ImportDto ToDto(InsulinBolus entity);
 }
