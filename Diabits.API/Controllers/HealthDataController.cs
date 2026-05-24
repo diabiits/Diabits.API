@@ -160,16 +160,14 @@ public class HealthDataController(IHealthDataService healthDataService) : Contro
         if (userId == null)
             return Unauthorized();
 
-        //TODO Add file type and size validation as needed. For now, just check if a file was uploaded.
+        //TODO Add file type and size validation. For now, just check if a file was uploaded.
         if (file.Length == 0)
             return BadRequest("File is empty");
 
         try
         {
             await using var stream = file.OpenReadStream();
-
             await _healthDataService.AddDataPointsAsync(stream, userId);
-
             return Ok("Import successful");
         }
         catch (Exception e)

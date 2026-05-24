@@ -62,7 +62,6 @@ public class TimelineDashboardService : ITimelineDashboardService
             .Select(x => (FlowEnum?)x.Flow)
             .FirstOrDefaultAsync();
 
-        //TODO Add carb and glucose level details on label
         var insulinBoluses = await QueryDay<InsulinBolus>(userId, dayStart, dayEnd)
             .Select(x => new NumericPoint(x.StartTime, x.Units))
             .ToListAsync();
