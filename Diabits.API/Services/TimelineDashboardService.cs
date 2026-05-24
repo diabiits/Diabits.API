@@ -69,7 +69,7 @@ public class TimelineDashboardService : ITimelineDashboardService
         var series = new List<TimelineSeries>
         {
             new(
-                Name: "Glucose",
+                Name: "Glucose Level",
                 Type: TimelineSeriesType.Line,
                 Points: BucketNumeric(glucoseLevels, dayStart, "mmol/L")
             ),
