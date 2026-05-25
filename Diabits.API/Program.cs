@@ -56,7 +56,7 @@ app.MapControllers();
 //TODO Figure out migrations in prod
 if (!app.Environment.IsEnvironment("Test"))
 {
-    await app.Services.InitializeDatabaseAsync();
+    //await app.Services.InitializeDatabaseAsync();
 }
 
 app.Run();
