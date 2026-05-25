@@ -94,7 +94,7 @@ public static class ServiceExtensions
                 //TODO Refactor - make secure
                 var allowedOrigins = config.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
-                if (allowedOrigins.Length >= 0)
+                if (allowedOrigins.Length == 0)
                 {
                     policy
                     .AllowAnyOrigin()
@@ -121,7 +121,8 @@ public static class ServiceExtensions
     public static IServiceCollection AddDiabitsDataAccess(this IServiceCollection services, IConfiguration config)
     {
         services.AddDbContext<DiabitsDbContext>(options =>
-            options.UseSqlServer(config.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(config.GetConnectionString("DefaultConnection"), 
+                sql => sql.EnableRetryOnFailure()));
 
         services
             .AddIdentity<DiabitsUser, IdentityRole>()
